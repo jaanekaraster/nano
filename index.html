@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GIS Layer Browser</title>
+  <link href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css" rel="stylesheet">
+  <style>
+    :root { color-scheme: light; --ink: #17201d; --muted: #60706a; --paper: #f4f1e8; --panel: rgba(255,255,255,.94); --accent: #d75a3a; --line: #d9d7cd; }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; font-family: Georgia, 'Times New Roman', serif; color: var(--ink); background: var(--paper); }
+    body { overflow: hidden; }
+    .shell { display: grid; grid-template-columns: 310px 1fr; height: 100%; }
+    aside { z-index: 2; display: flex; flex-direction: column; gap: 22px; min-height: 0; padding: 28px 24px; background: var(--panel); border-right: 1px solid var(--line); box-shadow: 8px 0 24px rgba(23,32,29,.08); }
+    .eyebrow { margin: 0 0 8px; font: 700 11px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .13em; text-transform: uppercase; color: var(--accent); }
+    h1 { margin: 0; font-size: 30px; line-height: 1.02; font-weight: 500; }
+    .intro { margin: 12px 0 0; font-size: 15px; line-height: 1.45; color: var(--muted); }
+    .layers { display: grid; gap: 9px; min-height: 0; overflow-y: auto; padding-right: 3px; }
+    .section-label { margin: 0 0 8px; font: 700 11px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    .layer { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; gap: 8px 10px; min-width: 0; padding: 9px 10px; border: 1px solid var(--line); background: #fffefa; }
+    .layer.active { border-color: var(--accent); }
+    .layer:hover { border-color: var(--accent); }
+    .layer input { width: 16px; height: 16px; accent-color: var(--accent); }
+    .layer-name { min-width: 0; align-self: center; overflow-wrap: anywhere; font-size: 15px; line-height: 1.2; }
+    .layer-type { align-self: center; font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); text-transform: uppercase; }
+    .layer-info { grid-column: 2 / -1; display: grid; gap: 8px; min-width: 0; }
+    .layer-legend { display: grid; gap: 4px; min-width: 0; }
+    .legend-bar { height: 9px; border: 1px solid rgba(23,32,29,.18); background: linear-gradient(90deg, transparent, var(--legend-color)); }
+    .legend-values { display: flex; justify-content: space-between; gap: 8px; font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); }
+    .citation-button { justify-self: start; padding: 0; border: 0; background: transparent; color: var(--accent); font: 700 12px ui-monospace, SFMono-Regular, Menlo, monospace; cursor: pointer; }
+    .citation { margin: 0; overflow-wrap: anywhere; font-size: 12px; line-height: 1.35; color: var(--muted); }
+    .empty { padding: 12px 0; font-size: 14px; color: var(--muted); }
+    .note { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px; line-height: 1.45; color: var(--muted); }
+    .note code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; color: var(--ink); }
+    #map { min-width: 0; height: 100%; background: #dce4df; }
+    .maplibregl-ctrl-group { border-radius: 0; box-shadow: 0 2px 8px rgba(23,32,29,.12); }
+    .status { position: absolute; left: 330px; bottom: 20px; z-index: 3; max-width: min(480px, calc(100% - 350px)); padding: 9px 12px; background: rgba(23,32,29,.9); color: #fff; font: 12px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    @media (max-width: 700px) { .shell { grid-template-columns: 1fr; grid-template-rows: auto 1fr; } aside { gap: 12px; padding: 16px; border-right: 0; border-bottom: 1px solid var(--line); } .intro, .note { display: none; } h1 { font-size: 24px; } .layers { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); max-height: 180px; overflow: auto; } .status { left: 16px; bottom: 16px; max-width: calc(100% - 32px); } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <aside>
+      <header>
+        <p class="eyebrow">Open map studio</p>
+        <h1>GIS layer browser</h1>
+        <p class="intro">A local canvas for inspecting the files in <code>/data</code>.</p>
+      </header>
+      <section>
+        <p class="section-label">Layers</p>
+        <div id="layers" class="layers" aria-live="polite"><div class="empty">Reading data folder...</div></div>
+      </section>
+      <p class="note">Add <code>.geojson</code>, <code>.json</code>, <code>.tif</code>, or <code>.tiff</code> files to <code>/data</code>, then reload this page. GeoParquet is listed for future support.</p>
+        <p class="note">Add source files to <code>/data</code> and update <code>layers.json</code> for PMTiles metadata. GeoParquet is listed for future support.</p>
+    </aside>
+    <div id="map"></div>
+  </main>
+  <div id="status" class="status" hidden></div>
+  <script src="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"></script>
+    <script src="https://unpkg.com/pmtiles@4.5.0/dist/pmtiles.js"></script>
+  <script src="https://unpkg.com/geotiff@2.1.3/dist-browser/geotiff.js"></script>
+  <script src="https://unpkg.com/proj4@2.11.0/dist/proj4.js"></script>
+  <script>
+      const pmtilesProtocol = new pmtiles.Protocol();
+      maplibregl.addProtocol('pmtiles', pmtilesProtocol.tile);
+    const map = new maplibregl.Map({
+      container: 'map',
+      style: {
+        version: 8,
+        sources: {
+          osm: {
+            type: 'raster',
+            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+            tileSize: 256,
+            attribution: '© OpenStreetMap contributors'
+          }
+        },
+        layers: [
+          {
+            id: 'osm-basemap',
+            type: 'raster',
+            source: 'osm'
+          }
+        ]
+      },
+      center: [78, 20],
+      zoom: 4,
+      attributionControl: true
+    });
+    map.addControl(new maplibregl.NavigationControl(), 'top-right');
+
+    const layerPanel = document.querySelector('#layers');
+    const status = document.querySelector('#status');
+    const loaded = new Map();
+    const rasterRenderCache = new Map();
+      const layerManifest = new Map();
+    const sourceProjection = '+proj=moll +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs';
+    const rasterRamps = [
+      { match: /built_s_nres/i, color: [196, 96, 255, 235] },
+      { match: /built_s/i, color: [0, 191, 255, 235] },
+      { match: /pop/i, color: [255, 34, 55, 235] },
+      { match: /.*/, color: [39, 111, 108, 235] }
+    ];
+    const layerMetadata = [
+      { match: /built_s_nres/i, title: 'Built Non-Residential Surface Change (2000-2025)', citation: 'Source: aurangabad_built_s_nres_2025_2000_cog.tif. Clipped to pincodes_aurangabad.geojson.' },
+      { match: /built_s/i, title: 'Built Surface Change (2000-2025)', citation: 'Source: aurangabad_built_s_2025_2000_cog.tif. Clipped to pincodes_aurangabad.geojson.' },
+      { match: /pop/i, title: 'Population Change (2000-2025)', citation: 'Source: aurangabad_pop_2025_2000_clipped.tif. Clipped to pincodes_aurangabad.geojson.' },
+      { match: /pincodes_aurangabad/i, title: 'Aurangabad Pincode Boundaries', citation: 'Source: pincodes_aurangabad.geojson.' }
+    ];
+
+    function showStatus(message, isError = false) {
+      status.textContent = message;
+      status.hidden = false;
+      status.style.background = isError ? '#9b382a' : 'rgba(23,32,29,.9)';
+      if (!isError) window.setTimeout(() => { status.hidden = true; }, 3500);
+    }
+
+    function fileType(filename) {
+      const extension = filename.split('.').pop().toLowerCase();
+      if (extension === 'geojson' || extension === 'json') return 'vector';
+      if (extension === 'tif' || extension === 'tiff' || extension === 'geotiff') return 'raster';
+       if (extension === 'pmtiles') return 'pmtiles';
+      if (extension === 'parquet') return 'parquet';
+      return null;
+    }
+
+    function displayName(path) {
+      return decodeURIComponent(path.split('/').pop()).replace(/\.(geojson|json|tiff?|geotiff|parquet|pmtiles)$/i, '').replace(/[_-]+/g, ' ');
+    }
+
+    function metadataFor(path) {
+      const filename = path.split('/').pop();
+       const manifestEntry = layerManifest.get(path);
+       if (manifestEntry) return manifestEntry;
+      return layerMetadata.find(metadata => metadata.match.test(filename)) || {
+        title: displayName(path),
+        citation: `Source: ${filename}.`
+      };
+    }
+
+    async function discoverFiles() {
+      const manifestResponse = await fetch('data/layers.json');
+      let manifestFiles = [];
+       if (manifestResponse.ok) {
+         const manifest = await manifestResponse.json();
+         manifest.forEach(entry => layerManifest.set(entry.file, entry));
+        manifestFiles = manifest.map(entry => entry.file);
+       }
+      const response = await fetch('data/');
+      if (!response.ok) throw new Error('The /data directory could not be read.');
+      const html = await response.text();
+      const files = [...html.matchAll(/href=["']([^"']+)["']/gi)]
+        .map(match => decodeURIComponent(match[1]))
+        .map(path => path.replace(/&#47;|&#x2f;/gi, '/').split('/').pop())
+         .filter(path => fileType(path))
+        .filter(path => path !== 'layers.json')
+         .filter(path => ![...layerManifest.values()].some(entry => entry.source === path));
+      return [...new Set([...manifestFiles, ...files])];
+    }
+
+    function addVectorLayer(path, checked) {
+      const key = `vector-${path}`;
+      map.addSource(key, { type: 'geojson', data: `data/${encodeURIComponent(path.split('/').pop())}` });
+      map.addLayer({ id: `${key}-fill`, type: 'fill', source: key, filter: ['==', '$type', 'Polygon'], paint: { 'fill-color': '#d75a3a', 'fill-opacity': .24 } });
+      map.addLayer({ id: `${key}-line`, type: 'line', source: key, filter: ['in', '$type', 'LineString', 'Polygon'], paint: { 'line-color': '#8d3327', 'line-width': 2 } });
+      map.addLayer({ id: `${key}-point`, type: 'circle', source: key, filter: ['==', '$type', 'Point'], paint: { 'circle-color': '#17201d', 'circle-radius': 5, 'circle-stroke-color': '#fffefa', 'circle-stroke-width': 1 } });
+      [ 'fill', 'line', 'point' ].forEach(kind => map.setLayoutProperty(`${key}-${kind}`, 'visibility', checked ? 'visible' : 'none'));
+      loaded.set(path, { key, type: 'vector' });
+    }
+
+    function rasterRampFor(path) {
+       const manifestEntry = layerManifest.get(path);
+       if (manifestEntry?.color) return manifestEntry.color;
+      const filename = path.split('/').pop();
+      return rasterRamps.find(ramp => ramp.match.test(filename)).color;
+    }
+
+    function rampCssColor(path) {
+      const color = rasterRampFor(path);
+      return `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+    }
+
+    function colorFor(value, min, max, color) {
+      const ratio = Math.max(0, Math.min(1, (value - min) / (max - min || 1)));
+      return [color[0], color[1], color[2], color[3] * ratio];
+    }
+
+    async function renderCog(path) {
+      const tiff = await GeoTIFF.fromUrl(`data/${encodeURIComponent(path.split('/').pop())}`);
+      const baseImage = await tiff.getImage();
+      let image = baseImage;
+      const imageCount = await tiff.getImageCount();
+      for (let index = 1; index < imageCount; index += 1) {
+        const overview = await tiff.getImage(index);
+        if (overview.getWidth() >= 500 && overview.getWidth() < image.getWidth()) image = overview;
+      }
+      const sourceBounds = baseImage.getBoundingBox();
+      const sourceWidth = image.getWidth();
+      const sourceHeight = image.getHeight();
+      const previewWidth = 900;
+      const previewHeight = Math.max(1, Math.round(previewWidth * sourceHeight / sourceWidth));
+      const raster = await image.readRasters({ width: previewWidth, height: previewHeight, samples: [0], interleave: true });
+      const noData = image.getGDALNoData ? image.getGDALNoData() : null;
+      const corners = [
+        proj4(sourceProjection, 'EPSG:4326', [sourceBounds[0], sourceBounds[1]]),
+        proj4(sourceProjection, 'EPSG:4326', [sourceBounds[2], sourceBounds[3]])
+      ];
+      const west = Math.min(corners[0][0], corners[1][0]);
+      const east = Math.max(corners[0][0], corners[1][0]);
+      const south = Math.min(corners[0][1], corners[1][1]);
+      const north = Math.max(corners[0][1], corners[1][1]);
+      const canvas = document.createElement('canvas');
+      canvas.width = previewWidth; canvas.height = previewHeight;
+      const context = canvas.getContext('2d');
+      const pixels = context.createImageData(previewWidth, previewHeight);
+      const color = rasterRampFor(path);
+      let min = Infinity, max = -Infinity;
+      for (const value of raster) {
+        if (Number.isFinite(value) && value !== noData) { min = Math.min(min, value); max = Math.max(max, value); }
+      }
+      for (let y = 0; y < previewHeight; y += 1) {
+        for (let x = 0; x < previewWidth; x += 1) {
+          const lon = west + (x / (previewWidth - 1)) * (east - west);
+          const lat = north - (y / (previewHeight - 1)) * (north - south);
+          const projected = proj4('EPSG:4326', sourceProjection, [lon, lat]);
+          const sourceX = Math.round((projected[0] - sourceBounds[0]) / (sourceBounds[2] - sourceBounds[0]) * (previewWidth - 1));
+          const sourceY = Math.round((sourceBounds[3] - projected[1]) / (sourceBounds[3] - sourceBounds[1]) * (previewHeight - 1));
+          const sourceIndex = sourceY * previewWidth + sourceX;
+          const outputIndex = (y * previewWidth + x) * 4;
+          const value = raster[sourceIndex];
+          if (sourceX < 0 || sourceX >= previewWidth || sourceY < 0 || sourceY >= previewHeight || !Number.isFinite(value) || value === noData) { pixels.data[outputIndex + 3] = 0; continue; }
+          const pixelColor = colorFor(value, min, max, color);
+          pixels.data[outputIndex] = pixelColor[0]; pixels.data[outputIndex + 1] = pixelColor[1]; pixels.data[outputIndex + 2] = pixelColor[2]; pixels.data[outputIndex + 3] = pixelColor[3];
+        }
+      }
+      context.putImageData(pixels, 0, 0);
+      return { url: canvas.toDataURL('image/png'), bounds: [west, south, east, north], min, max };
+    }
+
+    function renderedRasterFor(path) {
+      if (!rasterRenderCache.has(path)) {
+        const renderPromise = renderCog(path).catch(error => {
+          rasterRenderCache.delete(path);
+          throw error;
+        });
+        rasterRenderCache.set(path, renderPromise);
+      }
+      return rasterRenderCache.get(path);
+    }
+
+      function addPmtilesRasterLayer(path, checked) {
+        const key = `raster-${path}`;
+        const metadata = metadataFor(path);
+        map.addSource(key, { type: 'raster', url: `pmtiles://data/${metadata.url || path}`, tileSize: 256 });
+        map.addLayer({ id: key, type: 'raster', source: key, paint: { 'raster-opacity': .86 } });
+        map.setLayoutProperty(key, 'visibility', checked ? 'visible' : 'none');
+        loaded.set(path, { key, type: 'raster' });
+        updateLayerLegend(path, metadata.min, metadata.max);
+        if (metadata.bounds) map.fitBounds([[metadata.bounds[0], metadata.bounds[1]], [metadata.bounds[2], metadata.bounds[3]]], { padding: 60, duration: 600 });
+      }
+
+    function waitForIdle() {
+      return new Promise(resolve => {
+        if ('requestIdleCallback' in window) {
+          window.requestIdleCallback(resolve, { timeout: 1000 });
+        } else {
+          window.setTimeout(resolve, 0);
+        }
+      });
+    }
+
+    async function preloadRasterLayers(files) {
+      for (const path of files.filter(file => fileType(file) === 'raster')) {
+        await waitForIdle();
+        try {
+          await renderedRasterFor(path);
+        } catch (error) {
+          console.warn(`Could not preload ${displayName(path)}:`, error);
+        }
+      }
+    }
+
+    async function addRasterLayer(path, checked) {
+       if (fileType(path) === 'pmtiles') {
+         addPmtilesRasterLayer(path, checked);
+         return;
+       }
+      showStatus(`Rendering ${displayName(path)}...`);
+      const rendered = await renderedRasterFor(path);
+      const key = `raster-${path}`;
+      map.addSource(key, { type: 'image', url: rendered.url, coordinates: [[rendered.bounds[0], rendered.bounds[3]], [rendered.bounds[2], rendered.bounds[3]], [rendered.bounds[2], rendered.bounds[1]], [rendered.bounds[0], rendered.bounds[1]]] });
+      map.addLayer({ id: key, type: 'raster', source: key, paint: { 'raster-opacity': .82 } });
+      map.setLayoutProperty(key, 'visibility', checked ? 'visible' : 'none');
+      loaded.set(path, { key, type: 'raster' });
+      updateLayerLegend(path, rendered.min, rendered.max);
+      map.fitBounds([[rendered.bounds[0], rendered.bounds[1]], [rendered.bounds[2], rendered.bounds[3]]], { padding: 60, duration: 600 });
+      showStatus(`${displayName(path)} loaded · values ${rendered.min.toFixed(2)}–${rendered.max.toFixed(2)}`);
+    }
+
+    async function toggleLayer(path, checked) {
+      const type = fileType(path);
+      if (type === 'parquet') { showStatus('GeoParquet is detected but not enabled in this browser-only MVP.', true); return; }
+      if (!map.isStyleLoaded()) {
+        map.once('load', () => toggleLayer(path, checked));
+        return;
+      }
+      try {
+        if (!loaded.has(path)) {
+          if (type === 'vector') addVectorLayer(path, checked);
+          if (type === 'raster' || type === 'pmtiles') await addRasterLayer(path, checked);
+        } else {
+          const entry = loaded.get(path);
+          const ids = entry.type === 'vector' ? [`${entry.key}-fill`, `${entry.key}-line`, `${entry.key}-point`] : [entry.key];
+          ids.forEach(id => map.setLayoutProperty(id, 'visibility', checked ? 'visible' : 'none'));
+        }
+      } catch (error) { showStatus(`Could not load ${displayName(path)}: ${error.message}`, true); }
+    }
+
+    function updateLayerLegend(path, min, max) {
+      const row = document.querySelector(`[data-layer-path="${CSS.escape(path)}"]`);
+      if (!row) return;
+      row.querySelector('.legend-min').textContent = Number.isFinite(min) ? min.toFixed(2) : 'No data';
+      row.querySelector('.legend-max').textContent = Number.isFinite(max) ? max.toFixed(2) : 'No data';
+    }
+
+    function renderLayerControl(path, initiallyChecked) {
+      const type = fileType(path);
+      const metadata = metadataFor(path);
+      const row = document.createElement('div'); row.className = `layer${initiallyChecked ? ' active' : ''}`; row.dataset.layerPath = path;
+      const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = initiallyChecked; checkbox.disabled = type === 'parquet';
+      checkbox.setAttribute('aria-label', `Toggle ${metadata.title}`);
+      checkbox.addEventListener('change', () => { row.classList.toggle('active', checkbox.checked); row.querySelector('.layer-info').hidden = !checkbox.checked; toggleLayer(path, checkbox.checked); });
+      const name = document.createElement('span'); name.className = 'layer-name'; name.textContent = metadata.title;
+      const kind = document.createElement('span'); kind.className = 'layer-type'; kind.textContent = type;
+      const info = document.createElement('div'); info.className = 'layer-info'; info.hidden = !initiallyChecked;
+      const legend = document.createElement('div'); legend.className = 'layer-legend'; legend.hidden = type !== 'raster' && type !== 'pmtiles';
+      legend.style.setProperty('--legend-color', rampCssColor(path));
+      legend.innerHTML = '<div class="legend-bar" aria-label="Transparent to layer color"></div><div class="legend-values"><span class="legend-min">Loading...</span><span class="legend-max">Loading...</span></div>';
+      const citationButton = document.createElement('button'); citationButton.className = 'citation-button'; citationButton.type = 'button'; citationButton.textContent = 'i'; citationButton.title = 'Show source citation'; citationButton.setAttribute('aria-label', `Show source citation for ${metadata.title}`);
+      const citation = document.createElement('p'); citation.className = 'citation'; citation.hidden = true; citation.textContent = metadata.citation;
+      citationButton.addEventListener('click', event => { event.stopPropagation(); citation.hidden = !citation.hidden; });
+      info.append(legend, citationButton, citation);
+      row.append(checkbox, name, kind, info); layerPanel.append(row);
+      if (initiallyChecked && type !== 'parquet') toggleLayer(path, true);
+    }
+
+    let layersInitialized = false;
+
+    async function initializeLayers() {
+      if (layersInitialized) return;
+      layersInitialized = true;
+      try {
+        const files = await discoverFiles();
+        layerPanel.replaceChildren();
+        if (!files.length) { layerPanel.innerHTML = '<div class="empty">No supported files found.</div>'; return; }
+        files.forEach((path, index) => renderLayerControl(path, index === 0));
+        preloadRasterLayers(files);
+      } catch (error) { layerPanel.innerHTML = `<div class="empty">${error.message} Start the local server from the repo root.</div>`; showStatus(error.message, true); }
+    }
+
+    map.on('styledata', initializeLayers);
+    map.on('load', initializeLayers);
+
+    window.setTimeout(initializeLayers, 0);
+  </script>
+</body>
+</html>

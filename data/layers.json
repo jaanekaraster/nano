@@ -1,0 +1,46 @@
+[
+  {
+    "file": "built_s.pmtiles",
+    "url": "pmtiles/built_s.pmtiles",
+    "source": "aurangabad_built_s_2025_2000_cog_clipped.tif",
+    "title": "Built Surface Change (2000-2025)",
+    "citation": "Source: aurangabad_built_s_2025_2000_cog_clipped.tif. Clipped to pincodes_aurangabad.geojson and colorized for raster PMTiles.",
+    "min": -234.94674682617,
+    "max": 6637.8759765625,
+    "color": [0, 191, 255, 235],
+    "bounds": [74.471733, 19.378338, 76.07505, 20.669867]
+  },
+  {
+    "file": "built_s_nres.pmtiles",
+    "url": "pmtiles/built_s_nres.pmtiles",
+    "source": "aurangabad_built_s_nres_2025_2000_cog_clipped.tif",
+    "title": "Built Non-Residential Surface Change (2000-2025)",
+    "citation": "Source: aurangabad_built_s_nres_2025_2000_cog_clipped.tif. Clipped to pincodes_aurangabad.geojson and colorized for raster PMTiles.",
+    "min": 0,
+    "max": 10000,
+    "color": [196, 96, 255, 235],
+    "bounds": [74.471733, 19.378338, 76.07505, 20.669867]
+  },
+  {
+    "file": "population.pmtiles",
+    "url": "pmtiles/population.pmtiles",
+    "source": "aurangabad_pop_2025_2000_clipped.tif",
+    "title": "Population Change (2000-2025)",
+    "citation": "Source: aurangabad_pop_2025_2000_clipped.tif. Clipped to pincodes_aurangabad.geojson and colorized for raster PMTiles.",
+    "min": -336.37921142578,
+    "max": 529.4892578125,
+    "color": [255, 34, 55, 235],
+    "bounds": [74.471733, 19.378338, 76.07505, 20.669867]
+  },
+  {
+    "file": "nightlights.pmtiles",
+    "url": "pmtiles/nightlights.pmtiles",
+    "source": "nightlights_aurangabad_2025_clipped.tif",
+    "title": "Nightlights (2025)",
+    "citation": "Source: nightlights_aurangabad_2025_clipped.tif. Clipped to pincodes_aurangabad.geojson and colorized for raster PMTiles.",
+    "min": 0.47940674424171,
+    "max": 65.227653503418,
+    "color": [255, 190, 55, 235],
+    "bounds": [74.5916667, 19.3791667, 76.0416667, 20.6666667]
+  }
+]

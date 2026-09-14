@@ -1,0 +1,10 @@
+.github/
+/data/context_data/
+/data/geotiff/
+/data/pincodes_aurangabad.geojson
+/data/rail.geojson
+/data/road_motorway.geojson
+/data/road_other.geojson
+/data/road_trunk.geojson
+/data/smod_2025_aurangabad.tif
+nanoclusters.Rmd
