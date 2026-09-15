@@ -1,12 +1,16 @@
 .github/
 /data/context_data/
 /data/geotiff/
+/data/districts/
 /data/pincodes_aurangabad.geojson
 /data/rail.geojson
 /data/road_motorway.geojson
 /data/road_other.geojson
 /data/road_trunk.geojson
 /data/smod_2025_aurangabad.tif
-/data/pmtiles/*
+/data/pmtiles/
+./pmtiles/
+/data/pmtiles/*.pmtiles
+/data/*_pincodes.geojson
 /build/
 nanoclusters.Rmd

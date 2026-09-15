@@ -5,6 +5,9 @@ ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 BUILD_DIR="$ROOT/build/pmtiles"
 OUTPUT_DIR="$ROOT/data/pmtiles"
 PMTILES_BIN="${PMTILES_BIN:-pmtiles}"
+if ! command -v "$PMTILES_BIN" >/dev/null 2>&1 && [[ -x "$HOME/.local/bin/pmtiles" ]]; then
+  PMTILES_BIN="$HOME/.local/bin/pmtiles"
+fi
 TARGET_ZOOM="${TARGET_ZOOM:-6}"
 TARGET_RESOLUTION=$(awk -v zoom="$TARGET_ZOOM" 'BEGIN { printf "%.12f", 156543.03392804097 / (2 ^ zoom) }')
 DETAIL_ZOOM="${DETAIL_ZOOM:-11}"
@@ -71,21 +74,21 @@ build_raster() {
 }
 
 build_raster \
-  built_s \
+  built_s_2000_2025 \
   geotiff/aurangabad_built_s_2025_2000_cog_clipped.tif \
-  -234.94674682617 6637.8759765625 0 191 255 \
+  -234.94674682617 6637.8759765625 140 90 60 \
   'Built Surface Change (2000-2025)' \
   'Colorized raster PMTiles clipped to Aurangabad pincode boundaries.'
 
 build_raster \
-  built_s_nres \
+  built_s_nres_2000_2025 \
   geotiff/aurangabad_built_s_nres_2025_2000_cog_clipped.tif \
   0 10000 196 96 255 \
   'Built Non-Residential Surface Change (2000-2025)' \
   'Colorized raster PMTiles clipped to Aurangabad pincode boundaries.'
 
 build_raster \
-  population \
+  population_2000_2025 \
   geotiff/aurangabad_pop_2025_2000_clipped.tif \
   -336.37921142578 529.4892578125 165 15 21 \
   'Population Change (2000-2025)' \
@@ -93,8 +96,15 @@ build_raster \
   diverging
 
 build_raster \
-  nightlights \
+  nightlights_2025 \
   geotiff/nightlights_aurangabad_2025_clipped.tif \
   0.47940674424171 65.227653503418 255 190 55 \
   'Nightlights (2025)' \
   'Colorized raster PMTiles clipped to Aurangabad pincode boundaries.'
+
+build_raster \
+  built_s_2025 \
+  geotiff/built_s_2025.tif \
+  0 10000 166 102 62 \
+  'Built Surface (2025)' \
+  'Colorized raster PMTiles generated from built_s_2025.tif.'

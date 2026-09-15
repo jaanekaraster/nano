@@ -22,4 +22,14 @@ Heavy raster layers are served as colorized raster PMTiles. Rebuild them after c
 PMTILES_BIN=/path/to/pmtiles scripts/build_pmtiles.sh
 ```
 
-The browser reads `data/layers.json` for PMTiles URLs, titles, citations, value ranges, and legend colors. Raster colors are baked into the tiles during the build, while the manifest keeps the UI legend consistent.
+The browser reads `data/layers.json` for PMTiles URLs, titles, citations, value ranges, and layer styling. Raster colors are baked into the tiles during the build, while the manifest keeps the UI legend consistent.
+
+## State district GeoJSON
+
+Extract a state's districts and a dissolved state boundary from the India district GeoJSON:
+
+```sh
+scripts/get_state_districts.sh "Maharashtra"
+```
+
+The script downloads and caches the all-India source under `build/districts/` and writes `data/districts/maharashtra_districts.geojson` and `data/districts/maharashtra_boundary.geojson`.
