@@ -27,9 +27,12 @@
     "source": "aurangabad_pop_2025_2000_clipped.tif",
     "title": "Population Change (2000-2025)",
     "citation": "Source: aurangabad_pop_2025_2000_clipped.tif. Clipped to pincodes_aurangabad.geojson and colorized for raster PMTiles.",
+    "version": 2,
     "min": -336.37921142578,
     "max": 529.4892578125,
-    "color": [255, 34, 55, 235],
+    "color": [118, 42, 131, 235],
+    "negativeColor": [165, 15, 21, 235],
+    "positiveColor": [118, 42, 131, 235],
     "bounds": [74.471733, 19.378338, 76.07505, 20.669867]
   },
   {

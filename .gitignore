@@ -7,4 +7,6 @@
 /data/road_other.geojson
 /data/road_trunk.geojson
 /data/smod_2025_aurangabad.tif
+/data/pmtiles/*
+/build/
 nanoclusters.Rmd
