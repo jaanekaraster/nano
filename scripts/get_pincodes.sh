@@ -3,7 +3,7 @@
 set -euo pipefail
 
 AWS_PROFILE="${AWS_PROFILE:-r2}"
-R2_BUCKET="${R2_BUCKET:-geographies}"
+R2_BUCKET="${R2_BUCKET:-geodata-lake}"
 R2_PREFIX="${R2_PREFIX:-pincodes}"
 
 # get_pincodes.sh lives in:
