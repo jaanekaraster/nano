@@ -9,6 +9,7 @@
 /data/road_trunk.geojson
 /data/smod_2025_aurangabad.tif
 /data/pmtiles/
+/data/processed/
 ./pmtiles/
 /data/pmtiles/*.pmtiles
 /data/*_pincodes.geojson

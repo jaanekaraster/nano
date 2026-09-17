@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 BUILD_DIR="$ROOT/build/pmtiles"
-INPUT_DIR="$ROOT/data/processed"
+INPUT_DIR="$ROOT/data/processed/clipped"
 OUTPUT_DIR="$ROOT/data/processed/pmtiles"
 PMTILES_BIN="${PMTILES_BIN:-pmtiles}"
 if ! command -v "$PMTILES_BIN" >/dev/null 2>&1 && [[ -x "$HOME/.local/bin/pmtiles" ]]; then
@@ -74,38 +74,46 @@ build_raster() {
   "$PMTILES_BIN" verify "$pmtiles"
 }
 
-build_raster \
-  built_s_2000_2025 \
-  built_s_2025_2000_cog.tif \
-  -234.94674682617 6637.8759765625 140 90 60 \
-  'Built Surface Change (2000-2025)' \
-  'Colorized raster PMTiles clipped to Aurangabad pincode boundaries.'
+shopt -s nullglob
+inputs=("$INPUT_DIR"/*.tif "$INPUT_DIR"/*.tiff)
+if [[ ${#inputs[@]} -eq 0 ]]; then
+  printf 'Error: no TIFF files found in %s.\n' "$INPUT_DIR" >&2
+  exit 1
+fi
 
-build_raster \
-  built_s_nres_2000_2025 \
-  built_s_nres_2025_2000_cog.tif \
-  0 10000 196 96 255 \
-  'Built Non-Residential Surface Change (2000-2025)' \
-  'Colorized raster PMTiles clipped to Aurangabad pincode boundaries.'
-
-build_raster \
-  population_2000_2025 \
-  population_2025_2000.tif \
-  -336.37921142578 529.4892578125 165 15 21 \
-  'Population Change (2000-2025)' \
-  'Colorized raster PMTiles clipped to Aurangabad pincode boundaries.' \
-  diverging
-
-build_raster \
-  nightlights_2025 \
-  nightlights_2025.tif \
-  0.47940674424171 65.227653503418 255 190 55 \
-  'Nightlights (2025)' \
-  'Colorized raster PMTiles clipped to Aurangabad pincode boundaries.'
-
-build_raster \
-  built_s_2025 \
-  built_s_2025.tif \
-  0 10000 166 102 62 \
-  'Built Surface (2025)' \
-  'Colorized raster PMTiles generated from built_s_2025.tif.'
+for input_path in "${inputs[@]}"; do
+  filename=$(basename "$input_path")
+  id="${filename%.*}"
+  case "$filename" in
+    built_s_2025_2000_cog.tif)
+      build_raster "$id" "$filename" -234.94674682617 6637.8759765625 140 90 60 \
+        'Built Surface Change (2000-2025)' \
+        'Colorized raster PMTiles clipped to the configured boundary.'
+      ;;
+    built_s_nres_2025_2000_cog.tif)
+      build_raster "$id" "$filename" 0 10000 196 96 255 \
+        'Built Non-Residential Surface Change (2000-2025)' \
+        'Colorized raster PMTiles clipped to the configured boundary.'
+      ;;
+    pop_2025_cog.tif|GHS_POP_E2025_GLOBE_R2023A_54009_100_V1_0_R7_C26.tif)
+      build_raster "$id" "$filename" -336.37921142578 529.4892578125 165 15 21 \
+        'Population Change (2000-2025)' \
+        'Colorized raster PMTiles clipped to the configured boundary.' diverging
+      ;;
+    nightlights_*2025*.tif)
+      build_raster "$id" "$filename" 0.47940674424171 65.227653503418 255 190 55 \
+        'Nightlights (2025)' \
+        'Colorized raster PMTiles clipped to the configured boundary.'
+      ;;
+    built_s_2025.tif)
+      build_raster "$id" "$filename" 0 10000 166 102 62 \
+        'Built Surface (2025)' \
+        'Colorized raster PMTiles generated from the clipped TIFF.'
+      ;;
+    *)
+      build_raster "$id" "$filename" 0 10000 39 111 108 \
+        "Colorized raster: $filename" \
+        'Colorized raster PMTiles generated from the clipped TIFF.'
+      ;;
+  esac
+done

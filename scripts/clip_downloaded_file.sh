@@ -4,7 +4,7 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RAW_DIR="${REPO_ROOT}/data/raw"
-PROCESSED_DIR="${REPO_ROOT}/data/processed"
+PROCESSED_DIR="${REPO_ROOT}/data/processed/clipped"
 DEFAULT_CUTLINE="${REPO_ROOT}/data/districts/maharashtra_boundary.geojson"
 
 usage() {
@@ -12,14 +12,14 @@ usage() {
 Usage: scripts/clip_downloaded_file.sh <filename> [geojson-path]
 
 Clips data/raw/<filename> to a GeoJSON boundary and writes the result to
-data/processed/<filename>. The raw input is removed only after a successful
+data/processed/clipped/<filename>. The raw input is removed only after a successful
 clip.
 
 The GeoJSON path may be absolute, relative to the current directory, or
 relative to data/. If omitted, Maharashtra's dissolved boundary is used.
 
 Example:
-  scripts/clip_downloaded_file.sh built_s_2025.tif districts/maharashtra_boundary.geojson
+    scripts/clip_downloaded_file.sh built_s_2025.tif districts/maharashtra_boundary.geojson
 EOF
 }
 

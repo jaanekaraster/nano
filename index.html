@@ -96,6 +96,8 @@
     const loaded = new Map();
     const rasterRenderCache = new Map();
       const layerManifest = new Map();
+    const pmtilesDirectory = 'data/processed/pmtiles';
+    const cacheBust = Date.now().toString();
     const sourceProjection = '+proj=moll +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs';
     const rasterRamps = [
       { match: /built_s_nres/i, color: [196, 96, 255, 235] },
@@ -104,9 +106,10 @@
       { match: /.*/, color: [39, 111, 108, 235] }
     ];
     const layerMetadata = [
-      { match: /built_s_nres/i, title: 'Built Non-Residential Surface Change (2000-2025)', citation: 'Source: aurangabad_built_s_nres_2025_2000_cog.tif. Clipped to pincodes_aurangabad.geojson.' },
-      { match: /built_s/i, title: 'Built Surface Change (2000-2025)', citation: 'Source: aurangabad_built_s_2025_2000_cog.tif. Clipped to pincodes_aurangabad.geojson.' },
-      { match: /pop/i, title: 'Population Change (2000-2025)', citation: 'Source: aurangabad_pop_2025_2000_clipped.tif. Clipped to pincodes_aurangabad.geojson.' },
+      { match: /built_s_nres/i, title: 'Built Non-Residential Surface Change (2000-2025)', citation: 'Source: built_s_nres_2025_2000_cog.tif. Clipped to the Maharashtra boundary.' },
+      { match: /built_s/i, title: 'Built Surface Change (2000-2025)', citation: 'Source: built_s_2025_2000_cog.tif. Clipped to the Maharashtra boundary.' },
+      { match: /pop/i, title: 'Population (2025)', citation: 'Source: pop_2025_cog.tif. Clipped to the Maharashtra boundary.' },
+      { match: /nightlights/i, title: 'Nightlights (West India, 2025)', citation: 'Source: nightlights_west_india_2025_cog.tif. Clipped to the Maharashtra boundary.' },
       { match: /pincodes_aurangabad/i, title: 'Aurangabad Pincode Boundaries', citation: 'Source: pincodes_aurangabad.geojson.' }
     ];
 
@@ -141,7 +144,7 @@
     }
 
     async function discoverFiles() {
-      const manifestResponse = await fetch('data/layers.json');
+      const manifestResponse = await fetch(`data/layers.json?v=${cacheBust}`, { cache: 'no-store' });
       let manifestFiles = [];
        if (manifestResponse.ok) {
          const manifest = await manifestResponse.json();
@@ -164,7 +167,7 @@
       const key = `vector-${path}`;
       const metadata = metadataFor(path);
       const vectorStyle = metadata.vectorStyle === 'state-boundary'
-        ? { lineColor: '#111', lineWidth: 4 }
+        ? { lineColor: '#111', lineWidth: 2 }
         : metadata.vectorStyle === 'district-boundaries'
           ? { lineColor: '#777', lineWidth: 1.2 }
           : { lineColor: '#8d3327', lineWidth: 2 };
@@ -271,8 +274,8 @@
       function addPmtilesRasterLayer(path, checked) {
         const key = `raster-${path}`;
         const metadata = metadataFor(path);
-        const cacheVersion = metadata.version ? `?v=${encodeURIComponent(metadata.version)}` : '';
-        map.addSource(key, { type: 'raster', url: `pmtiles://data/${metadata.url || path}${cacheVersion}`, tileSize: 256 });
+        const cacheVersion = `?v=${encodeURIComponent(metadata.version || cacheBust)}`;
+        map.addSource(key, { type: 'raster', url: `pmtiles://${pmtilesDirectory}/${encodeURIComponent(path.split('/').pop())}${cacheVersion}`, tileSize: 256 });
         map.addLayer({ id: key, type: 'raster', source: key, paint: { 'raster-opacity': .86 } });
         map.setLayoutProperty(key, 'visibility', checked ? 'visible' : 'none');
         loaded.set(path, { key, type: 'raster' });
