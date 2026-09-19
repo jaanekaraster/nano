@@ -223,7 +223,8 @@ map.addControl(layerControl, 'top-right');
     helpModal.addEventListener('click', event => { if (event.target === helpModal) helpModal.hidden = true; });
     const loaded = new Map();
     const rasterRenderCache = new Map();
-      const layerManifest = new Map();
+    const layerManifest = new Map();
+    const pincodeActivityCache = new Map();
     const pmtilesDirectory = 'data/processed/pmtiles';
     const cacheBust = Date.now().toString();
     const industryCategories = [
@@ -245,7 +246,21 @@ map.addControl(layerControl, 'top-right');
       ['Q. Human Health & Social Work', '#3d8b86'],
       ['R. Arts, Entertainment & Recreation', '#8c4d87'],
       ['S. Other Service Activities', '#69752d']
+    ]; 
+    const industryColors = new Map(
+  industryCategories.map(([category, hex]) => {
+    const value = hex.slice(1);
+
+    return [
+      category,
+      [
+        parseInt(value.slice(0, 2), 16),
+        parseInt(value.slice(2, 4), 16),
+        parseInt(value.slice(4, 6), 16)
+      ]
     ];
+  })
+);
     const sourceProjection = '+proj=moll +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs';
     const rasterRamps = [
       { match: /built_s_nres/i, color: [196, 96, 255, 235] },
@@ -324,6 +339,26 @@ map.addControl(layerControl, 'top-right');
       return manifest.map(entry => entry.file);
     }
 
+    async function loadPincodeActivity(path) {
+      if (pincodeActivityCache.size > 0) {
+        return pincodeActivityCache;
+      }
+
+      const response = await fetch(`data/${encodeURI(path)}?v=${cacheBust}`);
+
+      if (!response.ok) {
+        throw new Error(`Could not load pincode activity data: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      Object.entries(data).forEach(([pincode, activity]) => {
+        pincodeActivityCache.set(String(pincode), activity);
+      });
+
+      return pincodeActivityCache;
+    }
+
     function addVectorLayer(path, checked) {
       const key = `vector-${path}`;
       const metadata = metadataFor(path);
@@ -347,18 +382,9 @@ map.addControl(layerControl, 'top-right');
 loaded.set(path, entry);
 
 if (metadata.vectorStyle === 'pincode-activity') {
-  addPincodeMapOverlays(key, metadata.url || path)
-    .then(() => {
-      const waffleKey = `${key}-waffles`;
-      entry.extraLayerIds.push(waffleKey);
-
-      map.setLayoutProperty(
-        waffleKey,
-        'visibility',
-        checked ? 'visible' : 'none'
-      );
-    })
-    .catch(error => showStatus(error.message, true));
+  loadPincodeActivity(metadata.activityData)
+  .then(() => addPincodeMapOverlays(key, path))
+  .catch(error => showStatus(error.message, true));
 }
 
 ['fill', 'line', 'point'].forEach(kind => {
@@ -374,117 +400,415 @@ if (metadata.vectorStyle === 'pincode-activity') {
 }
     }
 
-    function addPincodeHover(key) {
-      const highlightKey = `${key}-highlight`;
-      map.addLayer({ id: highlightKey, type: 'line', source: key, filter: ['==', ['get', 'pincode'], ''], paint: { 'line-color': '#39ff14', 'line-width': 3.5, 'line-opacity': 0.98 } });
-      map.on('mousemove', `${key}-fill`, event => {
-        const feature = event.features?.[0];
-        if (!feature) return;
-        map.getCanvas().style.cursor = 'pointer';
-        map.setFilter(highlightKey, ['==', ['get', 'pincode'], String(feature.properties.pincode)]);
-        if (!pincodeLabelPopup) pincodeLabelPopup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10 });
-        pincodeLabelPopup.setLngLat(event.lngLat).setText(`Pincode ${feature.properties.pincode}`).addTo(map);
-      });
-      map.on('click', `${key}-fill`, event => {
-        const feature = event.features?.[0];
-        if (feature) showPincodeInspector(feature.properties);
-      });
-      map.on('mouseleave', `${key}-fill`, () => {
-        map.getCanvas().style.cursor = '';
-        map.setFilter(highlightKey, ['==', ['get', 'pincode'], '']);
-        pincodeLabelPopup?.remove();
+function addPincodeHover(key) {
+  const highlightKey = `${key}-highlight`;
+
+  map.addLayer({
+    id: highlightKey,
+    type: 'line',
+    source: key,
+    filter: ['==', ['get', 'pincode'], ''],
+    paint: {
+      'line-color': '#39ff14',
+      'line-width': 3.5,
+      'line-opacity': 0.98
+    }
+  });
+
+  map.on('mousemove', `${key}-fill`, event => {
+    const feature = event.features?.[0];
+    if (!feature) return;
+
+    const pincode = String(feature.properties?.pincode || '');
+
+    map.getCanvas().style.cursor = 'pointer';
+
+    map.setFilter(
+      highlightKey,
+      ['==', ['get', 'pincode'], pincode]
+    );
+
+    if (!pincodeLabelPopup) {
+      pincodeLabelPopup = new maplibregl.Popup({
+        closeButton: false,
+        closeOnClick: false,
+        offset: 10
       });
     }
 
-    function waffleImage(properties) {
-      const size = 60;
-      const canvas = document.createElement('canvas'); canvas.width = size; canvas.height = size;
-      const context = canvas.getContext('2d');
-      const inset = 0.75;
-      const radius = 4;
-      context.fillStyle = '#fff';
-      context.fillRect(0, 0, size, size);
-      const categoryData = typeof properties.category_data === 'string' ? JSON.parse(properties.category_data) : (properties.category_data || []);
-      const total = Number(properties.activity_total) || 0;
-      const cells = [];
-      industryCategories.forEach(([category, color]) => {
-        const value = Number(categoryData.find(item => item.general_category === category)?.activity_count) || 0;
-        for (let index = 0; index < Math.round(value / (total || 1) * 100); index += 1) cells.push(color);
-      });
-      while (cells.length < 100) cells.push('#e6e2d7');
-      const cellGap = 0;
-      const gridInset = 0;
-      const cellSize = (size - gridInset * 2 - cellGap * 9) / 10;
-      cells.slice(0, 100).forEach((color, index) => {
-        context.fillStyle = color;
-        context.fillRect(
-          gridInset + (index % 10) * (cellSize + cellGap),
-          gridInset + Math.floor(index / 10) * (cellSize + cellGap),
-          cellSize,
-          cellSize
-        );
-      });
-      context.beginPath();
-      context.roundRect(inset, inset, size - inset * 2, size - inset * 2, radius);
-      context.strokeStyle = '#9aa09a';
-      context.lineWidth = 1.5;
-      context.stroke();
-      return { width: size, height: size, data: context.getImageData(0, 0, size, size).data };
+    pincodeLabelPopup
+      .setLngLat(event.lngLat)
+      .setText(`Pincode ${pincode}`)
+      .addTo(map);
+  });
+
+  map.on('click', `${key}-fill`, event => {
+    const feature = event.features?.[0];
+    if (!feature) return;
+
+    const pincode = String(feature.properties?.pincode || '');
+
+    const activity = pincodeActivityCache.get(pincode);
+
+    if (!activity) {
+      showStatus(
+        `No activity data found for pincode ${pincode}.`,
+        true
+      );
+      return;
     }
+
+    showPincodeInspector({
+      pincode,
+      total: activity.total,
+      categories: activity.categories
+    });
+  });
+
+  map.on('mouseleave', `${key}-fill`, () => {
+    map.getCanvas().style.cursor = '';
+
+    map.setFilter(
+      highlightKey,
+      ['==', ['get', 'pincode'], '']
+    );
+
+    pincodeLabelPopup?.remove();
+  });
+}
+
+    function waffleImageFromActivity(activity) {
+  const size = 60;
+  const total = Number(activity.total) || 0;
+  const categories = activity.categories || {};
+
+  const canvas = document.createElement('canvas');
+canvas.width = 10;
+canvas.height = 10;
+
+  const context = canvas.getContext('2d', {
+    willReadFrequently: false
+  });
+
+  const imageData = context.createImageData(size, size);
+  const pixels = imageData.data;
+
+  const colors = [];
+
+  industryCategories.forEach(([category, color]) => {
+    const categoryId = {
+      'A. Agriculture, Forestry & Fishing': 'A',
+      'B. Mining & Quarrying': 'B',
+      'C. Manufacturing': 'C',
+      'D_E. Electricity, Gas, Water & Waste': 'DE',
+      'F. Construction': 'F',
+      'G. Wholesale & Retail Trade': 'G',
+      'H. Transportation & Storage': 'H',
+      'I. Accommodation & Food Services': 'I',
+      'J. Information & Communication': 'J',
+      'K. Financial & Insurance': 'K',
+      'L. Real Estate': 'L',
+      'M. Professional, Scientific & Technical': 'M',
+      'N. Administrative & Support Services': 'N',
+      'O. Public Administration & Defence': 'O',
+      'P. Education': 'P',
+      'Q. Human Health & Social Work': 'Q',
+      'R. Arts, Entertainment & Recreation': 'R',
+      'S. Other Service Activities': 'S'
+    }[category];
+
+    const value = Number(categories[categoryId]) || 0;
+    const count = Math.round(value / (total || 1) * 100);
+
+    for (let i = 0; i < count; i++) {
+      colors.push(color);
+    }
+  });
+
+  while (colors.length < 100) {
+    colors.push('#e6e2d7');
+  }
+
+  const cellSize = size / 10;
+
+  for (let index = 0; index < 100; index++) {
+    const color = colors[index];
+
+    const match = color.match(/^#([0-9a-f]{6})$/i);
+
+    const r = parseInt(match[1].slice(0, 2), 16);
+    const g = parseInt(match[1].slice(2, 4), 16);
+    const b = parseInt(match[1].slice(4, 6), 16);
+
+    const x0 = Math.floor((index % 10) * cellSize);
+    const y0 = Math.floor(Math.floor(index / 10) * cellSize);
+    const x1 = Math.floor((index % 10 + 1) * cellSize);
+    const y1 = Math.floor((Math.floor(index / 10) + 1) * cellSize);
+
+    for (let y = y0; y < y1; y++) {
+      for (let x = x0; x < x1; x++) {
+        const offset = (y * size + x) * 4;
+
+        pixels[offset] = r;
+        pixels[offset + 1] = g;
+        pixels[offset + 2] = b;
+        pixels[offset + 3] = 255;
+      }
+    }
+  }
+
+  context.putImageData(imageData, 0, 0);
+
+  return {
+    width: size,
+    height: size,
+    data: pixels
+  };
+}
 
     async function addPincodeMapOverlays(key, path) {
-      const response = await fetch(`data/${encodeURI(path)}?v=${cacheBust}`);
-      if (!response.ok) throw new Error(`Could not load pincode activity data: ${response.status}`);
+      const activity = pincodeActivityCache;
+
+      const response = await fetch(
+        `data/${encodeURI(metadataFor(path).url || path)}?v=${cacheBust}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`Could not load pincode boundaries: ${response.status}`);
+      }
+
       const sourceData = await response.json();
-      const points = sourceData.features.map(feature => ({
-        type: 'Feature',
-        properties: { pincode: feature.properties.pincode },
-        geometry: { type: 'Point', coordinates: [Number(feature.properties.centroid_lon), Number(feature.properties.centroid_lat)] },
-        sourceProperties: feature.properties
-      })).filter(feature => Number.isFinite(feature.geometry.coordinates[0]) && Number.isFinite(feature.geometry.coordinates[1]));
-      const pointKey = `${key}-waffles`;
-      points.forEach(point => {
-        const imageId = `${pointKey}-${point.properties.pincode}`;
-        if (!map.hasImage(imageId)) map.addImage(imageId, waffleImage(point.sourceProperties), { pixelRatio: 2 });
-        point.properties.imageId = imageId;
-        delete point.sourceProperties;
+
+      if (!sourceData?.features) {
+        throw new Error('Pincode boundary GeoJSON contains no features.');
+      }
+
+      const points = [];
+
+      sourceData.features.forEach(feature => {
+        const pincode = String(feature.properties?.pincode || '');
+        const pincodeActivity = activity.get(pincode);
+
+        if (!pincodeActivity) return;
+
+        points.push({
+          type: 'Feature',
+          properties: {
+            pincode,
+            imageId: `${key}-waffles-${pincode}`
+          },
+          geometry: {
+            type: 'Point',
+            coordinates: [
+              Number(pincodeActivity.lon),
+              Number(pincodeActivity.lat)
+            ]
+          }
+        });
       });
-      map.addSource(pointKey, { type: 'geojson', data: { type: 'FeatureCollection', features: points } });
-      map.addLayer({ id: pointKey, type: 'symbol', source: pointKey, layout: { 'icon-image': ['get', 'imageId'], 'icon-size': 1.4, 'icon-allow-overlap': true, 'icon-ignore-placement': true, 'visibility': 'visible' }, paint: { 'icon-opacity': 1 } });
-      loaded.set(`${path}-waffles`, { key: pointKey, type: 'raster' });
+
+      const pointKey = `${key}-waffles`;
+
+      console.time('waffle-generation');
+
+const waffleImages = new Map();
+
+points.forEach(point => {
+  const pincode = point.properties.pincode;
+  const activity = pincodeActivityCache.get(pincode);
+
+  waffleImages.set(
+    pincode,
+    waffleImageFromActivity(activity)
+  );
+});
+
+console.timeEnd('waffle-generation');
+
+console.time('waffle-upload');
+
+points.forEach(point => {
+  const imageId = point.properties.imageId;
+  const pincode = point.properties.pincode;
+
+  if (!map.hasImage(imageId)) {
+    map.addImage(
+      imageId,
+      waffleImages.get(pincode),
+      { pixelRatio: 1 }
+    );
+  }
+});
+
+console.timeEnd('waffle-upload');
+
+      map.addSource(pointKey, {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features: points
+        }
+      });
+
+      map.addLayer({
+        id: pointKey,
+        type: 'symbol',
+        source: pointKey,
+        layout: {
+          'icon-image': ['get', 'imageId'],
+          'icon-size': 0.8,
+          'icon-allow-overlap': true,
+          'icon-ignore-placement': true,
+          'visibility': 'visible'
+        },
+        paint: {
+          'icon-opacity': 1
+        }
+      });
+
+const entry = loaded.get(path);
+
+if (entry) {
+  entry.extraLayerIds = [
+    ...(entry.extraLayerIds || []),
+    pointKey
+  ];
+}
+
+      console.log(`Created ${points.length} pincode waffles.`);
     }
 
-    function showPincodeInspector(properties) {
-      const inspector = document.querySelector('#pincode-inspector');
-      const categoryData = typeof properties.category_data === 'string'
-        ? JSON.parse(properties.category_data)
-        : (properties.category_data || []);
-      const values = new Map(categoryData.map(item => [item.general_category, Number(item.activity_count) || 0]));
-      const total = Number(properties.activity_total) || 0;
-      const slices = industryCategories.map(([category, color]) => ({ category, color, value: values.get(category) || 0 }));
-      document.querySelector('#pincode-title').textContent = `Pincode ${properties.pincode}`;
-      document.querySelector('#pincode-total').textContent = `${total.toLocaleString()} activities`;
-      const chart = document.querySelector('#pincode-chart');
-      chart.replaceChildren();
-      const waffleValues = [];
-      slices.forEach(slice => { for (let index = 0; index < Math.round(slice.value / (total || 1) * 100); index += 1) waffleValues.push(slice.color); });
-      while (waffleValues.length < 100) waffleValues.push('#e6e2d7');
-      waffleValues.slice(0, 100).forEach(color => { const cell = document.createElement('span'); cell.className = 'waffle-cell'; cell.style.background = color; chart.append(cell); });
-      chart.setAttribute('aria-label', `Industry breakdown for pincode ${properties.pincode}`);
-      const body = document.querySelector('#pincode-table-body'); body.replaceChildren();
-      slices.filter(slice => slice.value > 0).sort((a, b) => b.value - a.value).forEach(slice => {
-        const row = document.createElement('tr');
-        const valueCell = document.createElement('td');
-        const activityCell = document.createElement('div'); activityCell.className = 'activity-cell';
-        const barTrack = document.createElement('div'); barTrack.className = 'activity-bar-track';
-        const bar = document.createElement('div'); bar.className = 'activity-bar'; bar.style.width = `${total ? (slice.value / total * 100) : 0}%`; bar.style.background = slice.color;
-        const value = document.createElement('span'); value.className = 'activity-value'; value.textContent = `${slice.value.toLocaleString()} (${total ? (slice.value / total * 100).toFixed(1) : '0.0'}%)`;
-        barTrack.append(bar); activityCell.append(barTrack, value); valueCell.append(activityCell);
-        const categoryCell = document.createElement('td'); categoryCell.textContent = slice.category;
-        row.append(valueCell, categoryCell); body.append(row);
-      });
-      inspector.hidden = false;
+function showPincodeInspector(activity) {
+  const inspector = document.querySelector('#pincode-inspector');
+
+  const pincode = String(activity.pincode || '');
+  const total = Number(activity.total) || 0;
+  const categories = activity.categories || {};
+
+  const slices = industryCategories.map(([category, color]) => {
+    const categoryId = {
+      'A. Agriculture, Forestry & Fishing': 'A',
+      'B. Mining & Quarrying': 'B',
+      'C. Manufacturing': 'C',
+      'D_E. Electricity, Gas, Water & Waste': 'DE',
+      'F. Construction': 'F',
+      'G. Wholesale & Retail Trade': 'G',
+      'H. Transportation & Storage': 'H',
+      'I. Accommodation & Food Services': 'I',
+      'J. Information & Communication': 'J',
+      'K. Financial & Insurance': 'K',
+      'L. Real Estate': 'L',
+      'M. Professional, Scientific & Technical': 'M',
+      'N. Administrative & Support Services': 'N',
+      'O. Public Administration & Defence': 'O',
+      'P. Education': 'P',
+      'Q. Human Health & Social Work': 'Q',
+      'R. Arts, Entertainment & Recreation': 'R',
+      'S. Other Service Activities': 'S'
+    }[category];
+
+    return {
+      category,
+      color,
+      value: Number(categories[categoryId]) || 0
+    };
+  });
+
+  document.querySelector('#pincode-title').textContent =
+    `Pincode ${pincode}`;
+
+  document.querySelector('#pincode-total').textContent =
+    `${total.toLocaleString()} activities`;
+
+  // ----------------------------------------------------------
+  // Waffle
+  // ----------------------------------------------------------
+
+  const chart = document.querySelector('#pincode-chart');
+  chart.replaceChildren();
+
+  const waffleValues = [];
+
+  slices.forEach(slice => {
+    const count = Math.round(
+      slice.value / (total || 1) * 100
+    );
+
+    for (let index = 0; index < count; index += 1) {
+      waffleValues.push(slice.color);
     }
+  });
+
+  while (waffleValues.length < 100) {
+    waffleValues.push('#e6e2d7');
+  }
+
+  waffleValues
+    .slice(0, 100)
+    .forEach(color => {
+      const cell = document.createElement('span');
+
+      cell.className = 'waffle-cell';
+      cell.style.background = color;
+
+      chart.append(cell);
+    });
+
+  chart.setAttribute(
+    'aria-label',
+    `Industry breakdown for pincode ${pincode}`
+  );
+
+  // ----------------------------------------------------------
+  // Activity table
+  // ----------------------------------------------------------
+
+  const body = document.querySelector('#pincode-table-body');
+  body.replaceChildren();
+
+  slices
+    .filter(slice => slice.value > 0)
+    .sort((a, b) => b.value - a.value)
+    .forEach(slice => {
+      const row = document.createElement('tr');
+
+      const valueCell = document.createElement('td');
+
+      const activityCell = document.createElement('div');
+      activityCell.className = 'activity-cell';
+
+      const barTrack = document.createElement('div');
+      barTrack.className = 'activity-bar-track';
+
+      const bar = document.createElement('div');
+      bar.className = 'activity-bar';
+
+      const percentage = total
+        ? slice.value / total * 100
+        : 0;
+
+      bar.style.width = `${percentage}%`;
+      bar.style.background = slice.color;
+
+      const value = document.createElement('span');
+      value.className = 'activity-value';
+
+      value.textContent =
+        `${slice.value.toLocaleString()} (${percentage.toFixed(1)}%)`;
+
+      barTrack.append(bar);
+      activityCell.append(barTrack, value);
+      valueCell.append(activityCell);
+
+      const categoryCell = document.createElement('td');
+      categoryCell.textContent = slice.category;
+
+      row.append(valueCell, categoryCell);
+      body.append(row);
+    });
+
+  inspector.hidden = false;
+}
 
     function rasterStyleFor(path) {
        const manifestEntry = layerManifest.get(path);

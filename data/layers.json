@@ -6,14 +6,14 @@
     "citation": "Source: data/districts/maharashtra_boundary.geojson. Dissolved from the Maharashtra district boundaries.",
     "vectorStyle": "state-boundary"
   },
-  {
-    "file": "maharashtra_pincodes_activity.geojson",
-    "url": "maharashtra_pincodes_activity.geojson",
-    "source": "maharashtra_pincodes_activity.geojson",
-    "title": "Maharashtra Pincode Activity",
-    "citation": "Source: maharashtra_pincodes.geojson joined with pincode_nic_counts_general.parquet.",
-    "vectorStyle": "pincode-activity"
-  },
+{
+  "file": "maharashtra_pincodes.geojson",
+  "url": "maharashtra_pincodes.geojson",
+  "title": "Maharashtra Pincode Activity",
+  "citation": "Source: maharashtra_pincodes.geojson joined with pincode activity data.",
+  "vectorStyle": "pincode-activity",
+  "activityData": "pincode_activity.json"
+},
   {
     "file": "built_s_2025_2000_cog.pmtiles",
     "url": "processed/pmtiles/built_s_2025_2000_cog.pmtiles",
@@ -22,8 +22,7 @@
     "citation": "Source: built_s_2025_2000_cog.tif. Clipped to the Maharashtra boundary and colorized for raster PMTiles.",
     "min": -234.94674682617,
     "max": 6637.8759765625,
-    "color": [140, 90, 60, 235],
-    "bounds": [74.471733, 19.378338, 76.07505, 20.669867]
+    "color": [140, 90, 60, 235]
   },
   {
     "file": "built_s_2025.pmtiles",
@@ -33,8 +32,7 @@
     "citation": "Source: built_s_2025.tif. Clipped to the Maharashtra boundary and colorized for raster PMTiles.",
     "min": 0,
     "max": 10000,
-    "color": [166, 102, 62, 235],
-    "bounds": [59.8264, 8.092, 119.3858, 41.8942]
+    "color": [166, 102, 62, 235]
   },
   {
     "file": "built_s_nres_2025_2000_cog.pmtiles",
@@ -44,8 +42,7 @@
     "citation": "Source: built_s_nres_2025_2000_cog.tif. Clipped to the Maharashtra boundary and colorized for raster PMTiles.",
     "min": 0,
     "max": 10000,
-    "color": [196, 96, 255, 235],
-    "bounds": [74.471733, 19.378338, 76.07505, 20.669867]
+    "color": [196, 96, 255, 235]
   },
   {
     "file": "pop_2025_cog.pmtiles",
@@ -56,8 +53,7 @@
     "version": 2,
     "min": 0,
     "max": 529.4892578125,
-    "color": [118, 42, 131, 235],
-    "bounds": [74.471733, 19.378338, 76.07505, 20.669867]
+    "color": [118, 42, 131, 235]
   },
   {
     "file": "nightlights_west_india_2025_cog.pmtiles",
@@ -67,7 +63,6 @@
     "citation": "Source: nightlights_west_india_2025_cog.tif. Clipped to the Maharashtra boundary and colorized for raster PMTiles.",
     "min": 0.47940674424171,
     "max": 65.227653503418,
-    "color": [255, 190, 55, 235],
-    "bounds": [74.5916667, 19.3791667, 76.0416667, 20.6666667]
+    "color": [255, 190, 55, 235]
   }
 ]
