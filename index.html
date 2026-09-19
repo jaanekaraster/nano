@@ -114,8 +114,14 @@
   <script src="https://unpkg.com/geotiff@2.1.3/dist-browser/geotiff.js"></script>
   <script src="https://unpkg.com/proj4@2.11.0/dist/proj4.js"></script>
   <script>
-      const pmtilesProtocol = new pmtiles.Protocol();
-      maplibregl.addProtocol('pmtiles', pmtilesProtocol.tile);
+const pmtilesProtocol = new pmtiles.Protocol({
+  metadata: true
+});
+
+maplibregl.addProtocol(
+  'pmtiles',
+  pmtilesProtocol.tile
+);
     const map = new maplibregl.Map({
   container: 'map',
   style: {
@@ -364,7 +370,7 @@ map.addControl(layerControl, 'top-right');
       const metadata = metadataFor(path);
       const vectorStyle = metadata.vectorStyle === 'state-boundary'
         ? { lineColor: '#111', lineWidth: 2 }
-        : metadata.vectorStyle === 'district-boundaries'
+        : metadata.vectorStyle === 'state-boundary'
           ? { lineColor: '#777', lineWidth: 1.2 }
           : metadata.vectorStyle === 'pincode-activity'
             ? { lineColor: '#d75a3a', lineWidth: 1 }
@@ -902,18 +908,74 @@ function showPincodeInspector(activity) {
       return rasterRenderCache.get(path);
     }
 
-      function addPmtilesRasterLayer(path, checked) {
-        const key = `raster-${path}`;
-        const metadata = metadataFor(path);
-        const cacheVersion = `?v=${encodeURIComponent(metadata.version || cacheBust)}`;
-        map.addSource(key, { type: 'raster', url: `pmtiles://${pmtilesDirectory}/${encodeURIComponent(path.split('/').pop())}${cacheVersion}`, tileSize: 256 });
-        map.addLayer({ id: key, type: 'raster', source: key, paint: { 'raster-opacity': .86 } });
-        map.setLayoutProperty(key, 'visibility', checked ? 'visible' : 'none');
-        loaded.set(path, { key, type: 'raster' });
-        updateLayerLegend(path, metadata.min, metadata.max);
-        if (metadata.bounds) map.fitBounds([[metadata.bounds[0], metadata.bounds[1]], [metadata.bounds[2], metadata.bounds[3]]], { padding: 20, duration: 600 });
-      }
+function addPmtilesRasterLayer(path, checked) {
+  const key = `raster-${path}`;
+  const metadata = metadataFor(path);
 
+  const archiveUrl = new URL(
+    `${pmtilesDirectory}/${path.split('/').pop()}`,
+    window.location.href
+  ).href;
+
+  const pmtilesUrl = `pmtiles://${archiveUrl}`;
+
+  console.log('Adding PMTiles layer:', {
+    path,
+    key,
+    archiveUrl,
+    pmtilesUrl,
+    checked
+  });
+
+  map.addSource(key, {
+    type: 'raster',
+    url: pmtilesUrl,
+    tileSize: 256
+  });
+
+  map.addLayer({
+    id: key,
+    type: 'raster',
+    source: key,
+    layout: {
+      visibility: checked ? 'visible' : 'none'
+    },
+    paint: {
+      'raster-opacity': 0.86,
+      'raster-fade-duration': 0
+    }
+  });
+
+  loaded.set(path, {
+    key,
+    type: 'raster'
+  });
+
+  // PMTiles metadata is loaded by the protocol itself.
+  // If your manifest contains bounds, use them for initial positioning.
+  if (metadata.bounds && checked) {
+    map.fitBounds(
+      [
+        [metadata.bounds[0], metadata.bounds[1]],
+        [metadata.bounds[2], metadata.bounds[3]]
+      ],
+      {
+        padding: 20,
+        duration: 600
+      }
+    );
+  }
+
+  // Force a style/render update after adding the source/layer.
+  map.setLayoutProperty(
+    key,
+    'visibility',
+    checked ? 'visible' : 'none'
+  );
+
+  map.triggerRepaint();
+}
+ 
     function waitForIdle() {
       return new Promise(resolve => {
         if ('requestIdleCallback' in window) {
@@ -944,7 +1006,7 @@ function showPincodeInspector(activity) {
       const rendered = await renderedRasterFor(path);
       const key = `raster-${path}`;
       map.addSource(key, { type: 'image', url: rendered.url, coordinates: [[rendered.bounds[0], rendered.bounds[3]], [rendered.bounds[2], rendered.bounds[3]], [rendered.bounds[2], rendered.bounds[1]], [rendered.bounds[0], rendered.bounds[1]]] });
-      map.addLayer({ id: key, type: 'raster', source: key, paint: { 'raster-opacity': .82 } });
+      map.addLayer({ id: key, type: 'raster', source: key, paint: { 'raster-opacity': .82, 'raster-fade-duration': 0 } });
       map.setLayoutProperty(key, 'visibility', checked ? 'visible' : 'none');
       loaded.set(path, { key, type: 'raster' });
       updateLayerLegend(path, rendered.min, rendered.max);
@@ -952,41 +1014,90 @@ function showPincodeInspector(activity) {
       showStatus(`${displayName(path)} loaded · values ${rendered.min.toFixed(2)}–${rendered.max.toFixed(2)}`);
     }
 
-    async function toggleLayer(path, checked) {
-      const type = fileType(path);
-      if (type === 'parquet') { showStatus('GeoParquet is detected but not enabled in this browser-only MVP.', true); return; }
-      if (!map.isStyleLoaded()) {
-        map.once('load', () => toggleLayer(path, checked));
-        return;
+async function toggleLayer(path, checked) {
+  const type = fileType(path);
+
+  if (type === 'parquet') {
+    showStatus(
+      'GeoParquet is detected but not enabled in this browser-only MVP.',
+      true
+    );
+    return;
+  }
+
+  if (!map.isStyleLoaded()) {
+    map.once('load', () => {
+      toggleLayer(path, checked);
+    });
+    return;
+  }
+
+  try {
+    if (!loaded.has(path)) {
+      if (type === 'vector') {
+        addVectorLayer(path, checked);
+      } else if (type === 'raster') {
+        await addRasterLayer(path, checked);
+      } else if (type === 'pmtiles') {
+        addPmtilesRasterLayer(path, checked);
       }
-      try {
-        if (!loaded.has(path)) {
-          if (type === 'vector') addVectorLayer(path, checked);
-          if (type === 'raster' || type === 'pmtiles') await addRasterLayer(path, checked);
-        } else {
-  const entry = loaded.get(path);
 
-  const ids = entry.type === 'vector'
-    ? [
-        `${entry.key}-fill`,
-        `${entry.key}-line`,
-        `${entry.key}-point`,
-        ...(entry.extraLayerIds || [])
-      ]
-    : [entry.key];
+      map.triggerRepaint();
+      return;
+    }
 
-  ids.forEach(id => {
-    if (map.getLayer(id)) {
+    const entry = loaded.get(path);
+
+    const ids = entry.type === 'vector'
+      ? [
+          `${entry.key}-fill`,
+          `${entry.key}-line`,
+          `${entry.key}-point`,
+          ...(entry.extraLayerIds || [])
+        ]
+      : [entry.key];
+
+    console.log(
+      `Setting ${displayName(path)} visibility to ${checked ? 'visible' : 'none'}`,
+      ids
+    );
+
+    for (const id of ids) {
+      if (!map.getLayer(id)) {
+        console.warn('Layer does not exist:', id);
+        continue;
+      }
+
       map.setLayoutProperty(
         id,
         'visibility',
         checked ? 'visible' : 'none'
       );
     }
-  });
-}
-      } catch (error) { showStatus(`Could not load ${displayName(path)}: ${error.message}`, true); }
+
+    map.triggerRepaint();
+
+    // Useful diagnostic: verify that MapLibre actually accepted
+    // the visibility change.
+    for (const id of ids) {
+      if (map.getLayer(id)) {
+        console.log(
+          id,
+          'visibility =',
+          map.getLayoutProperty(id, 'visibility')
+        );
+      }
     }
+
+  } catch (error) {
+    console.error('Layer toggle failed:', path, error);
+
+    showStatus(
+      `Could not load ${displayName(path)}: ${error.message}`,
+      true
+    );
+  }
+}
 
     function updateLayerLegend(path, min, max) {
       const row = document.querySelector(`[data-layer-path="${CSS.escape(path)}"]`);

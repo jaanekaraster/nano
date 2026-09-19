@@ -6,6 +6,13 @@
     "citation": "Source: data/districts/maharashtra_boundary.geojson. Dissolved from the Maharashtra district boundaries.",
     "vectorStyle": "state-boundary"
   },
+  {
+    "file": "districts/INDIA_STATES.geojson",
+    "url": "districts/INDIA_STATES.geojson",
+    "title": "India States",
+    "citation": "Source: https://github.com/datta07/INDIAN-SHAPEFILES/blob/master/INDIA/INDIA_STATES.geojson",
+    "vectorStyle": "state-boundary-other"
+  },
 {
   "file": "maharashtra_pincodes.geojson",
   "url": "maharashtra_pincodes.geojson",
