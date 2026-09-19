@@ -302,24 +302,26 @@ map.addControl(layerControl, 'top-right');
     }
 
     async function discoverFiles() {
-      const manifestResponse = await fetch(`data/layers.json?v=${cacheBust}`, { cache: 'no-store' });
-      let manifestFiles = [];
-       if (manifestResponse.ok) {
-         const manifest = await manifestResponse.json();
-         manifest.forEach(entry => layerManifest.set(entry.file, entry));
-        manifestFiles = manifest.map(entry => entry.file);
-       }
-      const response = await fetch('data/');
-      if (!response.ok) throw new Error('The /data directory could not be read.');
-      const html = await response.text();
-      const files = [...html.matchAll(/href=["']([^"']+)["']/gi)]
-        .map(match => decodeURIComponent(match[1]))
-        .map(path => path.replace(/&#47;|&#x2f;/gi, '/').split('/').pop())
-         .filter(path => fileType(path))
-        .filter(path => path !== 'layers.json')
-         .filter(path => path !== 'maharashtra_pincodes.geojson')
-         .filter(path => ![...layerManifest.values()].some(entry => entry.source === path));
-      return [...new Set([...manifestFiles, ...files])];
+      const manifestResponse = await fetch(
+        `data/layers.json?v=${cacheBust}`,
+        { cache: 'no-store' }
+      );
+
+      if (!manifestResponse.ok) {
+        throw new Error(
+          `Could not load data/layers.json: ${manifestResponse.status}`
+        );
+      }
+
+      const manifest = await manifestResponse.json();
+
+      layerManifest.clear();
+
+      manifest.forEach(entry => {
+        layerManifest.set(entry.file, entry);
+      });
+
+      return manifest.map(entry => entry.file);
     }
 
     function addVectorLayer(path, checked) {
