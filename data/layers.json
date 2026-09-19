@@ -7,11 +7,12 @@
     "vectorStyle": "state-boundary"
   },
   {
-    "file": "districts/maharashtra_districts.geojson",
-    "url": "districts/maharashtra_districts.geojson",
-    "title": "Maharashtra Districts",
-    "citation": "Source: data/districts/maharashtra_districts.geojson.",
-    "vectorStyle": "district-boundaries"
+    "file": "maharashtra_pincodes_activity.geojson",
+    "url": "maharashtra_pincodes_activity.geojson",
+    "source": "maharashtra_pincodes_activity.geojson",
+    "title": "Maharashtra Pincode Activity",
+    "citation": "Source: maharashtra_pincodes.geojson joined with pincode_nic_counts_general.parquet.",
+    "vectorStyle": "pincode-activity"
   },
   {
     "file": "built_s_2025_2000_cog.pmtiles",
@@ -53,11 +54,9 @@
     "title": "Population (2025)",
     "citation": "Source: pop_2025_cog.tif. Clipped to the Maharashtra boundary and colorized for raster PMTiles.",
     "version": 2,
-    "min": -336.37921142578,
+    "min": 0,
     "max": 529.4892578125,
     "color": [118, 42, 131, 235],
-    "negativeColor": [165, 15, 21, 235],
-    "positiveColor": [118, 42, 131, 235],
     "bounds": [74.471733, 19.378338, 76.07505, 20.669867]
   },
   {

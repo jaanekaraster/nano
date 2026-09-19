@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GIS Layer Browser</title>
+  <title>Maharashtra Economic Activity</title>
   <link href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css" rel="stylesheet">
   <style>
     :root { color-scheme: light; --ink: #17201d; --muted: #60706a; --paper: #f4f1e8; --panel: rgba(255,255,255,.94); --accent: #d75a3a; --line: #d9d7cd; }
@@ -12,52 +12,103 @@
     body { overflow: hidden; }
     .shell { display: grid; grid-template-columns: 310px 1fr; height: 100%; }
     aside { z-index: 2; display: flex; flex-direction: column; gap: 22px; min-height: 0; padding: 28px 24px; background: var(--panel); border-right: 1px solid var(--line); box-shadow: 8px 0 24px rgba(23,32,29,.08); }
-    .eyebrow { margin: 0 0 8px; font: 700 11px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .13em; text-transform: uppercase; color: var(--accent); }
-    h1 { margin: 0; font-size: 30px; line-height: 1.02; font-weight: 500; }
-    .intro { margin: 12px 0 0; font-size: 15px; line-height: 1.45; color: var(--muted); }
+    .eyebrow { margin: 0 0 8px; font: 700 11px/1.2 Calibri; letter-spacing: .13em; text-transform: uppercase; color: var(--accent); }
+    h1 { margin: 0; font-size: 20px; line-height: 1.02; font-weight: 500; }
+    header { position: relative; padding-right: 52px; }
+    .intro { margin: 12px 0 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
     aside section { display: flex; flex: 1; min-height: 0; flex-direction: column; }
     .layers { display: grid; flex: 1; gap: 9px; min-height: 0; overflow-y: auto; padding-right: 3px; }
-    .section-label { margin: 0 0 8px; font: 700 11px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    .section-label { margin: 0 0 8px; font: 700 11px/1.2 Calibri; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
     .layer { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; gap: 8px 10px; min-width: 0; padding: 9px 10px; border: 1px solid var(--line); background: #fffefa; }
     .layer.active { border-color: var(--accent); }
     .layer:hover { border-color: var(--accent); }
     .layer input { width: 16px; height: 16px; accent-color: var(--accent); }
     .layer-name { min-width: 0; align-self: center; overflow-wrap: anywhere; font-size: 15px; line-height: 1.2; }
-    .layer-type { align-self: center; font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); text-transform: uppercase; }
+    .layer-type { align-self: center; font: 10px Calibri; color: var(--muted); text-transform: uppercase; }
     .layer-info { grid-column: 2 / -1; display: grid; gap: 8px; min-width: 0; }
     .layer-legend { display: grid; gap: 4px; min-width: 0; }
     .legend-bar { height: 9px; border: 1px solid rgba(23,32,29,.18); background: linear-gradient(90deg, transparent, var(--legend-color)); }
     .layer-legend.diverging .legend-bar { background: linear-gradient(90deg, var(--legend-negative-color), transparent 50%, var(--legend-positive-color)); }
-    .legend-values { display: flex; justify-content: space-between; gap: 8px; font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); }
-    .citation-button { justify-self: start; padding: 0; border: 0; background: transparent; color: var(--accent); font: 700 12px ui-monospace, SFMono-Regular, Menlo, monospace; cursor: pointer; }
+    .legend-values { display: flex; justify-content: space-between; gap: 8px; font: 10px Calibri; color: var(--muted); }
+    .citation-button { justify-self: start; padding: 0; border: 0; background: transparent; color: var(--accent); font: 700 12px Calibri; cursor: pointer; }
     .citation { margin: 0; overflow-wrap: anywhere; font-size: 12px; line-height: 1.35; color: var(--muted); }
     .empty { padding: 12px 0; font-size: 14px; color: var(--muted); }
-    .note { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px; line-height: 1.45; color: var(--muted); }
-    .note code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; color: var(--ink); }
+    .category-legend { display: grid; gap: 5px; max-height: 220px; overflow-y: auto; padding-right: 3px; }
+    .category-key { display: grid; grid-template-columns: 10px minmax(0, 1fr); gap: 7px; align-items: start; font: 11px/1.25 Calibri; color: var(--muted); }
+    .category-swatch { width: 10px; height: 10px; margin-top: 2px; }
+    .pincode-inspector { position: absolute; top: 20px; right: 20px; z-index: 4; display: grid; gap: 9px; width: min(340px, calc(100% - 40px)); max-height: calc(100% - 40px); overflow-y: auto; overflow-x: hidden; padding: 16px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 8px 24px rgba(23,32,29,.14); }
+    .pincode-inspector[hidden] { display: none; }
+    .pincode-heading { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+    .pincode-title { margin: 0; font-size: 17px; font-weight: 500; }
+    .pincode-total { margin: 0; font: 11px Calibri; color: var(--muted); }
+    .pincode-close { flex: 0 0 auto; padding: 0 4px; border: 0; background: transparent; color: var(--muted); font: 20px/1 Georgia, 'Times New Roman', serif; cursor: pointer; }
+    .pincode-close:hover { color: var(--ink); }
+    .pincode-chart { display: grid; grid-template-columns: repeat(10, 1fr); gap: 1px; width: 150px; height: 150px; margin: 0 auto; padding: 3px; background: #e6e2d7; }
+    .waffle-cell { min-width: 0; min-height: 0; }
+    .pincode-table-wrap { min-height: 0; overflow: visible; border: 1px solid var(--line); background: #fffefa; }
+    .pincode-table { width: 100%; table-layout: fixed; border-collapse: collapse; font: 9px/1.15 Calibri; }
+    .pincode-table th:first-child, .pincode-table td:first-child { width: 48%; }
+    .pincode-table th:last-child, .pincode-table td:last-child { width: 52%; }
+    .pincode-table th, .pincode-table td { padding: 3px 4px; border-bottom: 1px solid var(--line); text-align: left; overflow-wrap: anywhere; }
+    .activity-cell { display: grid; grid-template-columns: 64px auto; gap: 4px; align-items: center; min-width: 0; }
+    .activity-bar-track { width: 64px; height: 8px; background: #e6e2d7; }
+    .activity-bar { height: 100%; min-width: 2px; }
+    .activity-value { white-space: nowrap; color: var(--ink); }
+    .pincode-table th { position: sticky; top: 0; background: #f4f1e8; color: var(--muted); }
+    .help-button { position: absolute; top: 0; right: 0; padding: 7px 11px; border: 1px solid var(--line); background: #fffefa; color: var(--ink); font: 700 11px Calibri; cursor: pointer; }
+    .help-button:hover { border-color: var(--accent); }
+    .help-modal { position: fixed; inset: 0; z-index: 8; display: grid; place-items: center; padding: 20px; background: rgba(23,32,29,.35); }
+    .help-modal[hidden] { display: none; }
+    .help-panel { width: min(430px, 100%); padding: 22px; background: #fffefa; border: 1px solid var(--line); box-shadow: 0 12px 40px rgba(23,32,29,.2); }
+    .help-panel h2 { margin: 0 0 12px; font-size: 22px; font-weight: 500; }
+    .help-panel p { margin: 0 0 12px; font-size: 14px; line-height: 1.45; color: var(--muted); }
+    .help-close { padding: 7px 11px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font: 700 11px Calibri; cursor: pointer; }
     #map { min-width: 0; height: 100%; background: #dce4df; }
     .maplibregl-ctrl-group { border-radius: 0; box-shadow: 0 2px 8px rgba(23,32,29,.12); }
     .status { position: absolute; left: 330px; bottom: 20px; z-index: 3; max-width: min(480px, calc(100% - 350px)); padding: 9px 12px; background: rgba(23,32,29,.9); color: #fff; font: 12px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace; }
-    @media (max-width: 700px) { .shell { grid-template-columns: 1fr; grid-template-rows: minmax(0, auto) minmax(0, 1fr); } aside { gap: 12px; max-height: 45vh; min-height: 0; overflow: hidden; padding: 16px; border-right: 0; border-bottom: 1px solid var(--line); } aside section { display: flex; flex: 1; min-height: 0; flex-direction: column; } .intro, .note { display: none; } h1 { font-size: 24px; } .layers { flex: 1; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); max-height: none; overflow: auto; } .status { left: 16px; bottom: 16px; max-width: calc(100% - 32px); } }
+    @media (max-width: 700px) { .shell { grid-template-columns: 1fr; grid-template-rows: minmax(0, auto) minmax(0, 1fr); } aside { gap: 12px; max-height: 45vh; min-height: 0; overflow: hidden; padding: 16px; border-right: 0; border-bottom: 1px solid var(--line); } aside section { display: flex; flex: 1; min-height: 0; flex-direction: column; } .intro { display: none; } h1 { font-size: 24px; } .layers { flex: 1; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); max-height: none; overflow: auto; } .pincode-inspector { top: 12px; right: 12px; width: min(300px, calc(100% - 24px)); max-height: calc(100% - 24px); } .status { left: 16px; bottom: 16px; max-width: calc(100% - 32px); } }
   </style>
 </head>
 <body>
   <main class="shell">
     <aside>
       <header>
-        <p class="eyebrow">Open map studio</p>
-        <h1>GIS layer browser</h1>
-        <p class="intro">A local canvas for inspecting the files in <code>/data</code>.</p>
+        <p class="eyebrow">Interactive Map</p>
+        <h1>Maharashtra Economic Activity</h1>
+        <p class="intro">Exploring links between satellite imagery and economic data</p>
+        <button id="help-button" class="help-button" type="button">Help</button>
       </header>
+      <section>
+        <p class="section-label">Industry categories</p>
+        <div id="category-legend" class="category-legend" aria-label="General industry category colors"></div>
+      </section>
       <section>
         <p class="section-label">Layers</p>
         <div id="layers" class="layers" aria-live="polite"><div class="empty">Reading data folder...</div></div>
       </section>
-      <p class="note">Add <code>.geojson</code>, <code>.json</code>, <code>.tif</code>, or <code>.tiff</code> files to <code>/data</code>, then reload this page. GeoParquet is listed for future support.</p>
-        <p class="note">Add source files to <code>/data</code> and update <code>layers.json</code> for PMTiles metadata. GeoParquet is listed for future support.</p>
     </aside>
     <div id="map"></div>
+    <section id="pincode-inspector" class="pincode-inspector" hidden aria-live="polite">
+      <div class="pincode-heading">
+    <h2 id="pincode-title" class="pincode-title"></h2>
+    <p id="pincode-total" class="pincode-total"></p>
+    <button type="button" id="pincode-close" class="pincode-close" aria-label="Close">
+      ×
+    </button>
+  </div>
+      <div id="pincode-chart" class="pincode-chart" role="img" aria-label="Pincode industry category breakdown"></div>
+      <div class="pincode-table-wrap"><table class="pincode-table"><thead><tr><th># Activities</th><th>General Category</th></tr></thead><tbody id="pincode-table-body"></tbody></table></div>
+    </section>
   </main>
   <div id="status" class="status" hidden></div>
+  <div id="help-modal" class="help-modal" hidden>
+    <div class="help-panel" role="dialog" aria-modal="true" aria-labelledby="help-title">
+      <h2 id="help-title">Information</h2>
+      <p>Toggle layers from the sidebar. The pincode activity layer shows a 10x10 waffle at each pincode centroid; each square represents one percent of that pincode's recorded activity.</p>
+      <p>Hover a pincode to see its category totals and percentages. The sidebar legend keeps category colors consistent between the map and the detail table.</p>
+      <button id="help-close" class="help-close" type="button">Close</button>
+    </div>
+  </div>
   <script src="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"></script>
     <script src="https://unpkg.com/pmtiles@4.5.0/dist/pmtiles.js"></script>
   <script src="https://unpkg.com/geotiff@2.1.3/dist-browser/geotiff.js"></script>
@@ -66,43 +117,140 @@
       const pmtilesProtocol = new pmtiles.Protocol();
       maplibregl.addProtocol('pmtiles', pmtilesProtocol.tile);
     const map = new maplibregl.Map({
-      container: 'map',
-      style: {
-        version: 8,
-        sources: {
-          osm: {
-            type: 'raster',
-            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-            tileSize: 256,
-            attribution: '© OpenStreetMap contributors'
-          }
-        },
-        layers: [
-          {
-            id: 'osm-basemap',
-            type: 'raster',
-            source: 'osm'
-          }
-        ]
+  container: 'map',
+  style: {
+    version: 8,
+
+    sources: {
+      osm: {
+        type: 'raster',
+        tiles: [
+          'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+        ],
+        tileSize: 256,
+        attribution: '© OpenStreetMap contributors'
       },
-      center: [78, 20],
-      zoom: 4,
-      attributionControl: true
+
+      satellite: {
+        type: 'raster',
+        tiles: [
+          'https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{y}/{x}.jpg'
+        ],
+        tileSize: 256,
+        attribution: 'Sentinel-2 cloudless © EOX'
+      }
+    },
+
+    layers: [
+      {
+        id: 'osm-basemap',
+        type: 'raster',
+        source: 'osm'
+      },
+      {
+        id: 'satellite-basemap',
+        type: 'raster',
+        source: 'satellite',
+        layout: {
+          visibility: 'none'
+        }
+      }
+    ]
+  },
+
+  center: [76.3002, 18.9],
+  zoom: 5.85,
+  attributionControl: true
+});
+
+    const layerControl = {
+  onAdd(map) {
+    this._map = map;
+
+    const container = document.createElement('div');
+    container.className = 'maplibregl-ctrl maplibregl-ctrl-group';
+
+    container.innerHTML = `
+      <select title="Basemap" style="
+        height: 29px;
+        border: 0;
+        padding: 0 8px;
+        font-size: 12px;
+        background: white;
+        cursor: pointer;
+      ">
+        <option value="osm">OpenStreetMap</option>
+        <option value="satellite">Satellite</option>
+      </select>
+    `;
+
+    const select = container.querySelector('select');
+
+    select.addEventListener('change', e => {
+      const satellite = e.target.value === 'satellite';
+
+      map.setLayoutProperty(
+        'osm-basemap',
+        'visibility',
+        satellite ? 'none' : 'visible'
+      );
+
+      map.setLayoutProperty(
+        'satellite-basemap',
+        'visibility',
+        satellite ? 'visible' : 'none'
+      );
     });
-    map.addControl(new maplibregl.NavigationControl(), 'top-right');
+
+    return container;
+  },
+
+  onRemove() {
+    this._map = undefined;
+  }
+};
+
+map.addControl(layerControl, 'top-right');
 
     const layerPanel = document.querySelector('#layers');
     const status = document.querySelector('#status');
+    let pincodeLabelPopup;
+    const pincodeInspector = document.querySelector('#pincode-inspector');
+    document.querySelector('#pincode-close').addEventListener('click', () => { pincodeInspector.hidden = true; });
+    const helpModal = document.querySelector('#help-modal');
+    document.querySelector('#help-button').addEventListener('click', () => { helpModal.hidden = false; });
+    document.querySelector('#help-close').addEventListener('click', () => { helpModal.hidden = true; });
+    helpModal.addEventListener('click', event => { if (event.target === helpModal) helpModal.hidden = true; });
     const loaded = new Map();
     const rasterRenderCache = new Map();
       const layerManifest = new Map();
     const pmtilesDirectory = 'data/processed/pmtiles';
     const cacheBust = Date.now().toString();
+    const industryCategories = [
+      ['A. Agriculture, Forestry & Fishing', '#2f6f4e'],
+      ['B. Mining & Quarrying', '#7b5b3e'],
+      ['C. Manufacturing', '#d75a3a'],
+      ['D_E. Electricity, Gas, Water & Waste', '#d39b32'],
+      ['F. Construction', '#9b6b43'],
+      ['G. Wholesale & Retail Trade', '#356f8a'],
+      ['H. Transportation & Storage', '#6b4c9a'],
+      ['I. Accommodation & Food Services', '#b84d72'],
+      ['J. Information & Communication', '#277f7a'],
+      ['K. Financial & Insurance', '#396b9c'],
+      ['L. Real Estate', '#8b7561'],
+      ['M. Professional, Scientific & Technical', '#557a42'],
+      ['N. Administrative & Support Services', '#aa6c2d'],
+      ['O. Public Administration & Defence', '#5b6575'],
+      ['P. Education', '#c06b3c'],
+      ['Q. Human Health & Social Work', '#3d8b86'],
+      ['R. Arts, Entertainment & Recreation', '#8c4d87'],
+      ['S. Other Service Activities', '#69752d']
+    ];
     const sourceProjection = '+proj=moll +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs';
     const rasterRamps = [
       { match: /built_s_nres/i, color: [196, 96, 255, 235] },
       { match: /built_s/i, color: [166, 102, 62, 235] },
-      { match: /pop/i, color: [118, 42, 131, 235], negativeColor: [165, 15, 21, 235], positiveColor: [118, 42, 131, 235] },
+      { match: /pop/i, color: [118, 42, 131, 235] },
       { match: /.*/, color: [39, 111, 108, 235] }
     ];
     const layerMetadata = [
@@ -112,6 +260,16 @@
       { match: /nightlights/i, title: 'Nightlights (West India, 2025)', citation: 'Source: nightlights_west_india_2025_cog.tif. Clipped to the Maharashtra boundary.' },
       { match: /pincodes_aurangabad/i, title: 'Aurangabad Pincode Boundaries', citation: 'Source: pincodes_aurangabad.geojson.' }
     ];
+
+    function renderIndustryLegend() {
+      const legend = document.querySelector('#category-legend');
+      industryCategories.forEach(([category, color]) => {
+        const row = document.createElement('div'); row.className = 'category-key';
+        const swatch = document.createElement('span'); swatch.className = 'category-swatch'; swatch.style.background = color;
+        const label = document.createElement('span'); label.textContent = category;
+        row.append(swatch, label); legend.append(row);
+      });
+    }
 
     function showStatus(message, isError = false) {
       status.textContent = message;
@@ -159,6 +317,7 @@
         .map(path => path.replace(/&#47;|&#x2f;/gi, '/').split('/').pop())
          .filter(path => fileType(path))
         .filter(path => path !== 'layers.json')
+         .filter(path => path !== 'maharashtra_pincodes.geojson')
          .filter(path => ![...layerManifest.values()].some(entry => entry.source === path));
       return [...new Set([...manifestFiles, ...files])];
     }
@@ -170,13 +329,159 @@
         ? { lineColor: '#111', lineWidth: 2 }
         : metadata.vectorStyle === 'district-boundaries'
           ? { lineColor: '#777', lineWidth: 1.2 }
+          : metadata.vectorStyle === 'pincode-activity'
+            ? { lineColor: '#d75a3a', lineWidth: 1 }
           : { lineColor: '#8d3327', lineWidth: 2 };
       map.addSource(key, { type: 'geojson', data: `data/${encodeURI(metadata.url || path)}` });
       map.addLayer({ id: `${key}-fill`, type: 'fill', source: key, filter: ['==', '$type', 'Polygon'], paint: { 'fill-opacity': 0 } });
       map.addLayer({ id: `${key}-line`, type: 'line', source: key, filter: ['in', '$type', 'LineString', 'Polygon'], paint: { 'line-color': vectorStyle.lineColor, 'line-width': vectorStyle.lineWidth } });
       map.addLayer({ id: `${key}-point`, type: 'circle', source: key, filter: ['==', '$type', 'Point'], paint: { 'circle-color': '#17201d', 'circle-radius': 5, 'circle-stroke-color': '#fffefa', 'circle-stroke-width': 1 } });
-      [ 'fill', 'line', 'point' ].forEach(kind => map.setLayoutProperty(`${key}-${kind}`, 'visibility', checked ? 'visible' : 'none'));
-      loaded.set(path, { key, type: 'vector' });
+      const entry = {
+  key,
+  type: 'vector',
+  extraLayerIds: []
+};
+
+loaded.set(path, entry);
+
+if (metadata.vectorStyle === 'pincode-activity') {
+  addPincodeMapOverlays(key, metadata.url || path)
+    .then(() => {
+      const waffleKey = `${key}-waffles`;
+      entry.extraLayerIds.push(waffleKey);
+
+      map.setLayoutProperty(
+        waffleKey,
+        'visibility',
+        checked ? 'visible' : 'none'
+      );
+    })
+    .catch(error => showStatus(error.message, true));
+}
+
+['fill', 'line', 'point'].forEach(kind => {
+  map.setLayoutProperty(
+    `${key}-${kind}`,
+    'visibility',
+    checked ? 'visible' : 'none'
+  );
+});
+
+if (metadata.vectorStyle === 'pincode-activity') {
+  addPincodeHover(key);
+}
+    }
+
+    function addPincodeHover(key) {
+      const highlightKey = `${key}-highlight`;
+      map.addLayer({ id: highlightKey, type: 'line', source: key, filter: ['==', ['get', 'pincode'], ''], paint: { 'line-color': '#39ff14', 'line-width': 3.5, 'line-opacity': 0.98 } });
+      map.on('mousemove', `${key}-fill`, event => {
+        const feature = event.features?.[0];
+        if (!feature) return;
+        map.getCanvas().style.cursor = 'pointer';
+        map.setFilter(highlightKey, ['==', ['get', 'pincode'], String(feature.properties.pincode)]);
+        if (!pincodeLabelPopup) pincodeLabelPopup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10 });
+        pincodeLabelPopup.setLngLat(event.lngLat).setText(`Pincode ${feature.properties.pincode}`).addTo(map);
+      });
+      map.on('click', `${key}-fill`, event => {
+        const feature = event.features?.[0];
+        if (feature) showPincodeInspector(feature.properties);
+      });
+      map.on('mouseleave', `${key}-fill`, () => {
+        map.getCanvas().style.cursor = '';
+        map.setFilter(highlightKey, ['==', ['get', 'pincode'], '']);
+        pincodeLabelPopup?.remove();
+      });
+    }
+
+    function waffleImage(properties) {
+      const size = 60;
+      const canvas = document.createElement('canvas'); canvas.width = size; canvas.height = size;
+      const context = canvas.getContext('2d');
+      const inset = 0.75;
+      const radius = 4;
+      context.fillStyle = '#fff';
+      context.fillRect(0, 0, size, size);
+      const categoryData = typeof properties.category_data === 'string' ? JSON.parse(properties.category_data) : (properties.category_data || []);
+      const total = Number(properties.activity_total) || 0;
+      const cells = [];
+      industryCategories.forEach(([category, color]) => {
+        const value = Number(categoryData.find(item => item.general_category === category)?.activity_count) || 0;
+        for (let index = 0; index < Math.round(value / (total || 1) * 100); index += 1) cells.push(color);
+      });
+      while (cells.length < 100) cells.push('#e6e2d7');
+      const cellGap = 0;
+      const gridInset = 0;
+      const cellSize = (size - gridInset * 2 - cellGap * 9) / 10;
+      cells.slice(0, 100).forEach((color, index) => {
+        context.fillStyle = color;
+        context.fillRect(
+          gridInset + (index % 10) * (cellSize + cellGap),
+          gridInset + Math.floor(index / 10) * (cellSize + cellGap),
+          cellSize,
+          cellSize
+        );
+      });
+      context.beginPath();
+      context.roundRect(inset, inset, size - inset * 2, size - inset * 2, radius);
+      context.strokeStyle = '#9aa09a';
+      context.lineWidth = 1.5;
+      context.stroke();
+      return { width: size, height: size, data: context.getImageData(0, 0, size, size).data };
+    }
+
+    async function addPincodeMapOverlays(key, path) {
+      const response = await fetch(`data/${encodeURI(path)}?v=${cacheBust}`);
+      if (!response.ok) throw new Error(`Could not load pincode activity data: ${response.status}`);
+      const sourceData = await response.json();
+      const points = sourceData.features.map(feature => ({
+        type: 'Feature',
+        properties: { pincode: feature.properties.pincode },
+        geometry: { type: 'Point', coordinates: [Number(feature.properties.centroid_lon), Number(feature.properties.centroid_lat)] },
+        sourceProperties: feature.properties
+      })).filter(feature => Number.isFinite(feature.geometry.coordinates[0]) && Number.isFinite(feature.geometry.coordinates[1]));
+      const pointKey = `${key}-waffles`;
+      points.forEach(point => {
+        const imageId = `${pointKey}-${point.properties.pincode}`;
+        if (!map.hasImage(imageId)) map.addImage(imageId, waffleImage(point.sourceProperties), { pixelRatio: 2 });
+        point.properties.imageId = imageId;
+        delete point.sourceProperties;
+      });
+      map.addSource(pointKey, { type: 'geojson', data: { type: 'FeatureCollection', features: points } });
+      map.addLayer({ id: pointKey, type: 'symbol', source: pointKey, layout: { 'icon-image': ['get', 'imageId'], 'icon-size': 1.4, 'icon-allow-overlap': true, 'icon-ignore-placement': true, 'visibility': 'visible' }, paint: { 'icon-opacity': 1 } });
+      loaded.set(`${path}-waffles`, { key: pointKey, type: 'raster' });
+    }
+
+    function showPincodeInspector(properties) {
+      const inspector = document.querySelector('#pincode-inspector');
+      const categoryData = typeof properties.category_data === 'string'
+        ? JSON.parse(properties.category_data)
+        : (properties.category_data || []);
+      const values = new Map(categoryData.map(item => [item.general_category, Number(item.activity_count) || 0]));
+      const total = Number(properties.activity_total) || 0;
+      const slices = industryCategories.map(([category, color]) => ({ category, color, value: values.get(category) || 0 }));
+      document.querySelector('#pincode-title').textContent = `Pincode ${properties.pincode}`;
+      document.querySelector('#pincode-total').textContent = `${total.toLocaleString()} activities`;
+      const chart = document.querySelector('#pincode-chart');
+      chart.replaceChildren();
+      const waffleValues = [];
+      slices.forEach(slice => { for (let index = 0; index < Math.round(slice.value / (total || 1) * 100); index += 1) waffleValues.push(slice.color); });
+      while (waffleValues.length < 100) waffleValues.push('#e6e2d7');
+      waffleValues.slice(0, 100).forEach(color => { const cell = document.createElement('span'); cell.className = 'waffle-cell'; cell.style.background = color; chart.append(cell); });
+      chart.setAttribute('aria-label', `Industry breakdown for pincode ${properties.pincode}`);
+      const body = document.querySelector('#pincode-table-body'); body.replaceChildren();
+      slices.filter(slice => slice.value > 0).sort((a, b) => b.value - a.value).forEach(slice => {
+        const row = document.createElement('tr');
+        const valueCell = document.createElement('td');
+        const activityCell = document.createElement('div'); activityCell.className = 'activity-cell';
+        const barTrack = document.createElement('div'); barTrack.className = 'activity-bar-track';
+        const bar = document.createElement('div'); bar.className = 'activity-bar'; bar.style.width = `${total ? (slice.value / total * 100) : 0}%`; bar.style.background = slice.color;
+        const value = document.createElement('span'); value.className = 'activity-value'; value.textContent = `${slice.value.toLocaleString()} (${total ? (slice.value / total * 100).toFixed(1) : '0.0'}%)`;
+        barTrack.append(bar); activityCell.append(barTrack, value); valueCell.append(activityCell);
+        const categoryCell = document.createElement('td'); categoryCell.textContent = slice.category;
+        row.append(valueCell, categoryCell); body.append(row);
+      });
+      inspector.hidden = false;
     }
 
     function rasterStyleFor(path) {
@@ -333,10 +638,27 @@
           if (type === 'vector') addVectorLayer(path, checked);
           if (type === 'raster' || type === 'pmtiles') await addRasterLayer(path, checked);
         } else {
-          const entry = loaded.get(path);
-          const ids = entry.type === 'vector' ? [`${entry.key}-fill`, `${entry.key}-line`, `${entry.key}-point`] : [entry.key];
-          ids.forEach(id => map.setLayoutProperty(id, 'visibility', checked ? 'visible' : 'none'));
-        }
+  const entry = loaded.get(path);
+
+  const ids = entry.type === 'vector'
+    ? [
+        `${entry.key}-fill`,
+        `${entry.key}-line`,
+        `${entry.key}-point`,
+        ...(entry.extraLayerIds || [])
+      ]
+    : [entry.key];
+
+  ids.forEach(id => {
+    if (map.getLayer(id)) {
+      map.setLayoutProperty(
+        id,
+        'visibility',
+        checked ? 'visible' : 'none'
+      );
+    }
+  });
+}
       } catch (error) { showStatus(`Could not load ${displayName(path)}: ${error.message}`, true); }
     }
 
@@ -376,6 +698,7 @@
     async function initializeLayers() {
       if (layersInitialized) return;
       layersInitialized = true;
+      renderIndustryLegend();
       try {
         const files = await discoverFiles();
         layerPanel.replaceChildren();

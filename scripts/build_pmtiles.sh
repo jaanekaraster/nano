@@ -96,9 +96,9 @@ for input_path in "${inputs[@]}"; do
         'Colorized raster PMTiles clipped to the configured boundary.'
       ;;
     pop_2025_cog.tif|GHS_POP_E2025_GLOBE_R2023A_54009_100_V1_0_R7_C26.tif)
-      build_raster "$id" "$filename" -336.37921142578 529.4892578125 165 15 21 \
-        'Population Change (2000-2025)' \
-        'Colorized raster PMTiles clipped to the configured boundary.' diverging
+      build_raster "$id" "$filename" 0 529.4892578125 118 42 131 \
+        'Population (2025)' \
+        'Colorized raster PMTiles clipped to the configured boundary.'
       ;;
     nightlights_*2025*.tif)
       build_raster "$id" "$filename" 0.47940674424171 65.227653503418 255 190 55 \
