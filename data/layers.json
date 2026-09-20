@@ -21,6 +21,13 @@
   "vectorStyle": "pincode-activity",
   "activityData": "pincode_activity.json"
 },
+{
+  "file": "built_s_2025_2000_urban.geojson",
+  "url": "built_s_2025_2000_urban.geojson",
+  "title": "Built-Up Area (2000-2025) - Dense Areas",
+  "citation": "Built-up surface change (2000–2025), GHS-BUILT-S. Pixels below 5000 m² built surface per 100m cell excluded; blobs under 1 km² removed. Areas of significant urban growth only.",
+  "vectorStyle": "urban-built-change" 
+},
   {
     "file": "built_s_2025_2000_cog.pmtiles",
     "url": "processed/pmtiles/built_s_2025_2000_cog.pmtiles",
@@ -32,6 +39,13 @@
     "color": [140, 90, 60, 235]
   },
   {
+  "file": "built_s_2025_urban.geojson",
+  "url": "built_s_2025_urban.geojson",
+  "title": "Built-Up Area (2025) - Dense Areas",
+  "citation": "Built-up surface (2025), GHS-BUILT-S. Pixels below 5000 m² built surface per 100m cell excluded; blobs under 1 km² removed. Dense urban footprints only.",
+  "vectorStyle": "urban-built" 
+},
+  {
     "file": "built_s_2025.pmtiles",
     "url": "processed/pmtiles/built_s_2025.pmtiles",
     "source": "built_s_2025.tif",
@@ -41,6 +55,13 @@
     "max": 10000,
     "color": [166, 102, 62, 235]
   },
+    {
+  "file": "built_s_nres_2025_2000_urban.geojson",
+  "url": "built_s_nres_2025_2000_urban.geojson",
+  "title": "Built-Up Non-Residential Area (2025) - Dense Areas",
+  "citation": "Non-residential built-up surface change (2000–2025), GHS-BUILT-S NRES. Pixels below 10 m² non-residential surface per 50m cell excluded; blobs under 0.5 km² removed. Commercial and industrial clusters only.",
+  "vectorStyle": "urban-nres" 
+},
   {
     "file": "built_s_nres_2025_2000_cog.pmtiles",
     "url": "processed/pmtiles/built_s_nres_2025_2000_cog.pmtiles",
@@ -51,6 +72,13 @@
     "max": 10000,
     "color": [196, 96, 255, 235]
   },
+      {
+  "file": "pop_2025_urban.geojson",
+  "url": "pop_2025_urban.geojson",
+  "title": "Population (2025) - Dense Areas",
+  "citation": "Population density (2025), GHS-POP. Pixels below 200 people per 100m cell excluded; blobs under 1 km² removed. Major urban agglomerations only.",
+  "vectorStyle": "urban-population" 
+},
   {
     "file": "pop_2025_cog.pmtiles",
     "url": "processed/pmtiles/pop_2025_cog.pmtiles",
@@ -62,11 +90,18 @@
     "max": 529.4892578125,
     "color": [118, 42, 131, 235]
   },
+      {
+  "file": "nightlights_west_india_2025_urban.geojson",
+  "url": "nightlights_west_india_2025_urban.geojson",
+  "title": "Nightlights (2025) - Dense Areas",
+  "citation": "Nighttime light intensity (2025), VIIRS. Pixels below radiance value 10 nW/cm²/sr excluded. No area filter applied; shows all lit settlements at native resolution.",
+  "vectorStyle": "urban-nightlights" 
+},
   {
     "file": "nightlights_west_india_2025_cog.pmtiles",
     "url": "processed/pmtiles/nightlights_west_india_2025_cog.pmtiles",
     "source": "nightlights_west_india_2025_cog.tif",
-    "title": "Nightlights (West India, 2025)",
+    "title": "Nightlights (2025)",
     "citation": "Source: nightlights_west_india_2025_cog.tif. Clipped to the Maharashtra boundary and colorized for raster PMTiles.",
     "min": 0.47940674424171,
     "max": 65.227653503418,

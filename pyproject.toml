@@ -1,0 +1,24 @@
+[project]
+name = "nano"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "jaanekaraster", email = "116946216+jaanekaraster@users.noreply.github.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fiona>=1.10.1",
+    "numpy>=2.5.3",
+    "pyproj>=3.8.0",
+    "rasterio>=1.5.1",
+    "shapely>=2.1.2",
+    "tqdm>=4.70.1",
+]
+
+[project.scripts]
+nano = "nano:main"
+
+[build-system]
+requires = ["uv_build>=0.12.6,<0.13.0"]
+build-backend = "uv_build"

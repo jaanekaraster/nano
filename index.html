@@ -105,6 +105,7 @@
     <div class="help-panel" role="dialog" aria-modal="true" aria-labelledby="help-title">
       <h2 id="help-title">Information</h2>
       <p>Toggle layers from the sidebar. The pincode activity layer shows a 10x10 waffle at each pincode centroid; each square represents one percent of that pincode's recorded activity.</p>
+      <p>For layers labeled "PMTILES", zoom in to the urban scale to see detail.</p>
       <p>Hover a pincode to see its category totals and percentages. The sidebar legend keeps category colors consistent between the map and the detail table.</p>
       <button id="help-close" class="help-close" type="button">Close</button>
     </div>
@@ -368,15 +369,35 @@ map.addControl(layerControl, 'top-right');
     function addVectorLayer(path, checked) {
       const key = `vector-${path}`;
       const metadata = metadataFor(path);
-      const vectorStyle = metadata.vectorStyle === 'state-boundary'
-        ? { lineColor: '#111', lineWidth: 2 }
-        : metadata.vectorStyle === 'state-boundary'
-          ? { lineColor: '#777', lineWidth: 1.2 }
-          : metadata.vectorStyle === 'pincode-activity'
-            ? { lineColor: '#d75a3a', lineWidth: 1 }
-          : { lineColor: '#8d3327', lineWidth: 2 };
+      const vectorStyle = 
+  metadata.vectorStyle === 'state-boundary'
+    ? { lineColor: '#111', lineWidth: 2, fillOpacity: 0 }
+  : metadata.vectorStyle === 'state-boundary-other'
+    ? { lineColor: '#777', lineWidth: 1.2, fillOpacity: 0 }
+  : metadata.vectorStyle === 'pincode-activity'
+    ? { lineColor: '#d75a3a', lineWidth: 1, fillOpacity: 0 }
+  : metadata.vectorStyle === 'urban-population'
+    ? { lineColor: '#7c2a83', lineWidth: 1.5, fillColor: '#7c2a83', fillOpacity: 0.2 }
+  : metadata.vectorStyle === 'urban-built'
+    ? { lineColor: '#a6663e', lineWidth: 1.5, fillColor: '#a6663e', fillOpacity: 0.2 }
+  : metadata.vectorStyle === 'urban-built-change'
+    ? { lineColor: '#8c5a3c', lineWidth: 1.5, fillColor: '#8c5a3c', fillOpacity: 0.2 }
+  : metadata.vectorStyle === 'urban-nres'
+    ? { lineColor: '#c460ff', lineWidth: 1.5, fillColor: '#c460ff', fillOpacity: 0.2 }
+  : metadata.vectorStyle === 'urban-nightlights'
+    ? { lineColor: '#ffbe37', lineWidth: 1.5, fillColor: '#ffbe37', fillOpacity: 0.2 }
+  : { lineColor: '#8d3327', lineWidth: 2, fillOpacity: 0 };
       map.addSource(key, { type: 'geojson', data: `data/${encodeURI(metadata.url || path)}` });
-      map.addLayer({ id: `${key}-fill`, type: 'fill', source: key, filter: ['==', '$type', 'Polygon'], paint: { 'fill-opacity': 0 } });
+      map.addLayer({ 
+  id: `${key}-fill`, 
+  type: 'fill', 
+  source: key, 
+  filter: ['==', '$type', 'Polygon'], 
+  paint: { 
+    'fill-color': vectorStyle.fillColor || '#000000',
+    'fill-opacity': vectorStyle.fillOpacity ?? 0
+  } 
+});
       map.addLayer({ id: `${key}-line`, type: 'line', source: key, filter: ['in', '$type', 'LineString', 'Polygon'], paint: { 'line-color': vectorStyle.lineColor, 'line-width': vectorStyle.lineWidth } });
       map.addLayer({ id: `${key}-point`, type: 'circle', source: key, filter: ['==', '$type', 'Point'], paint: { 'circle-color': '#17201d', 'circle-radius': 5, 'circle-stroke-color': '#fffefa', 'circle-stroke-width': 1 } });
       const entry = {
