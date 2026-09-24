@@ -10,43 +10,76 @@
     * { box-sizing: border-box; }
     html, body { height: 100%; margin: 0; font-family: Georgia, 'Times New Roman', serif; color: var(--ink); background: var(--paper); }
     body { overflow: hidden; }
-    .shell { display: grid; grid-template-columns: 310px 1fr; height: 100%; }
-    aside { z-index: 2; display: flex; flex-direction: column; gap: 22px; min-height: 0; padding: 28px 24px; background: var(--panel); border-right: 1px solid var(--line); box-shadow: 8px 0 24px rgba(23,32,29,.08); }
-    .eyebrow { margin: 0 0 8px; font: 700 11px/1.2 Calibri; letter-spacing: .13em; text-transform: uppercase; color: var(--accent); }
-    h1 { margin: 0; font-size: 20px; line-height: 1.02; font-weight: 500; }
-    header { position: relative; padding-right: 52px; }
-    .intro { margin: 12px 0 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
-    aside section { display: flex; flex: 1; min-height: 0; flex-direction: column; }
-    .layers { display: grid; flex: 1; gap: 9px; min-height: 0; overflow-y: auto; padding-right: 3px; }
-    .section-label { margin: 0 0 8px; font: 700 11px/1.2 Calibri; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-    .layer { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; gap: 8px 10px; min-width: 0; padding: 9px 10px; border: 1px solid var(--line); background: #fffefa; }
-    .layer.active { border-color: var(--accent); }
-    .layer:hover { border-color: var(--accent); }
-    .layer input { width: 16px; height: 16px; accent-color: var(--accent); }
-    .layer-name { min-width: 0; align-self: center; overflow-wrap: anywhere; font-size: 15px; line-height: 1.2; }
-    .layer-type { align-self: center; font: 10px Calibri; color: var(--muted); text-transform: uppercase; }
-    .layer-info { grid-column: 2 / -1; display: grid; gap: 8px; min-width: 0; }
-    .layer-legend { display: grid; gap: 4px; min-width: 0; }
-    .legend-bar { height: 9px; border: 1px solid rgba(23,32,29,.18); background: linear-gradient(90deg, transparent, var(--legend-color)); }
-    .layer-legend.diverging .legend-bar { background: linear-gradient(90deg, var(--legend-negative-color), transparent 50%, var(--legend-positive-color)); }
-    .legend-values { display: flex; justify-content: space-between; gap: 8px; font: 10px Calibri; color: var(--muted); }
-    .citation-button { justify-self: start; padding: 0; border: 0; background: transparent; color: var(--accent); font: 700 12px Calibri; cursor: pointer; }
-    .citation { margin: 0; overflow-wrap: anywhere; font-size: 12px; line-height: 1.35; color: var(--muted); }
-    .empty { padding: 12px 0; font-size: 14px; color: var(--muted); }
-    .category-legend { display: grid; gap: 5px; max-height: 220px; overflow-y: auto; padding-right: 3px; }
-    .category-key { display: grid; grid-template-columns: 10px minmax(0, 1fr); gap: 7px; align-items: start; font: 11px/1.25 Calibri; color: var(--muted); }
-    .category-swatch { width: 10px; height: 10px; margin-top: 2px; }
+    .shell { display: grid; grid-template-columns: 290px 1fr; height: 100%; }
+    aside { z-index: 2; display: flex; flex-direction: column; gap: 14px; min-height: 0; padding: 20px 16px 16px; background: var(--panel); border-right: 1px solid var(--line); box-shadow: 8px 0 24px rgba(23,32,29,.08); overflow: hidden; }
+    .eyebrow { margin: 0 0 4px; font: 700 10px/1.2 Calibri,sans-serif; letter-spacing: .13em; text-transform: uppercase; color: var(--accent); }
+    h1 { margin: 0; font-size: 17px; line-height: 1.05; font-weight: 500; }
+    header { position: relative; padding-right: 48px; flex-shrink: 0; }
+    .intro { margin: 6px 0 0; font-size: 11px; line-height: 1.4; color: var(--muted); }
+    .layers-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding-right: 2px; display: flex; flex-direction: column; gap: 6px; }
+
+    /* ── section label ── */
+    .section-label { margin: 0 0 5px; font: 700 10px/1.2 Calibri,sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+
+    /* ── category legend ── */
+    .cat-legend-toggle { display: flex; align-items: center; gap: 5px; cursor: pointer; background: none; border: none; padding: 0; font: 700 10px/1.2 Calibri,sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); width: 100%; text-align: left; }
+    .cat-legend-toggle .chevron { transition: transform .2s; display: inline-block; }
+    .cat-legend-toggle[aria-expanded="true"] .chevron { transform: rotate(90deg); }
+    .category-legend { display: grid; gap: 3px; padding-top: 5px; }
+    .category-legend[hidden] { display: none; }
+    .category-key { display: grid; grid-template-columns: 9px minmax(0, 1fr); gap: 6px; align-items: start; font: 10px/1.2 Calibri,sans-serif; color: var(--muted); }
+    .category-swatch { width: 9px; height: 9px; margin-top: 1px; flex-shrink: 0; }
+
+    /* ── layer groups ── */
+    .layer-group { border: 1px solid var(--line); background: #fffefa; }
+    .layer-group-header { display: grid; grid-template-columns: 16px minmax(0,1fr) auto; gap: 6px 8px; align-items: center; padding: 6px 8px; cursor: pointer; user-select: none; }
+    .layer-group-header:hover { background: #f9f6ed; }
+    .group-toggle-check { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+    .group-label { font-size: 12px; font-weight: 600; line-height: 1.2; }
+    .group-chevron { font-size: 10px; color: var(--muted); transition: transform .15s; }
+    .layer-group.open .group-chevron { transform: rotate(90deg); }
+    .layer-group-body { display: none; border-top: 1px solid var(--line); padding: 4px 0; }
+    .layer-group.open .layer-group-body { display: block; }
+
+    /* ── individual layer row ── */
+    .layer { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; gap: 5px 8px; align-items: center; padding: 5px 8px; position: relative; }
+    .layer + .layer { border-top: 1px solid var(--line); }
+    .layer.active .layer-name { color: var(--ink); }
+    .layer input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); flex-shrink: 0; }
+    .layer-name { font-size: 12px; line-height: 1.25; color: var(--muted); overflow-wrap: anywhere; }
+    .layer.active .layer-name { color: var(--ink); }
+
+    /* ── compact legend symbols ── */
+    .layer-legend-inline { display: flex; align-items: center; gap: 5px; margin-top: 2px; grid-column: 2 / 3; }
+    .legend-line-swatch { width: 22px; height: 0; border-top-width: 2px; border-top-style: solid; flex-shrink: 0; }
+    .legend-fill-swatch { width: 14px; height: 10px; border: 1.5px solid transparent; flex-shrink: 0; }
+    .legend-ramp { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+    .legend-ramp-bar { height: 6px; border: 1px solid rgba(23,32,29,.15); border-radius: 1px; }
+    .legend-ramp-values { display: flex; justify-content: space-between; font: 9px Calibri,sans-serif; color: var(--muted); }
+
+    /* ── info tooltip ── */
+    .layer-info-btn { flex-shrink: 0; width: 16px; height: 16px; border: 1px solid var(--line); background: #fffefa; color: var(--muted); font: 700 9px/16px Calibri,sans-serif; cursor: pointer; text-align: center; position: relative; padding: 0; }
+    .layer-info-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .layer-tooltip { display: none; position: absolute; right: 0; top: 20px; z-index: 10; width: 220px; padding: 8px 10px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 4px 12px rgba(23,32,29,.14); font: 11px/1.4 Calibri,sans-serif; color: var(--muted); pointer-events: none; }
+    .layer-info-btn:hover .layer-tooltip,
+    .layer-info-btn:focus .layer-tooltip { display: block; }
+
+    /* ── standalone layers (boundary, roads etc.) ── */
+    .standalone-layer { border: 1px solid var(--line); background: #fffefa; }
+    .standalone-layer .layer { padding: 5px 8px; }
+
+    /* ── pincode inspector ── */
     .pincode-inspector { position: absolute; top: 20px; right: 20px; z-index: 4; display: grid; gap: 9px; width: min(340px, calc(100% - 40px)); max-height: calc(100% - 40px); overflow-y: auto; overflow-x: hidden; padding: 16px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 8px 24px rgba(23,32,29,.14); }
     .pincode-inspector[hidden] { display: none; }
     .pincode-heading { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
     .pincode-title { margin: 0; font-size: 17px; font-weight: 500; }
-    .pincode-total { margin: 0; font: 11px Calibri; color: var(--muted); }
-    .pincode-close { flex: 0 0 auto; padding: 0 4px; border: 0; background: transparent; color: var(--muted); font: 20px/1 Georgia, 'Times New Roman', serif; cursor: pointer; }
+    .pincode-total { margin: 0; font: 11px Calibri,sans-serif; color: var(--muted); }
+    .pincode-close { flex: 0 0 auto; padding: 0 4px; border: 0; background: transparent; color: var(--muted); font: 20px/1 Georgia,'Times New Roman',serif; cursor: pointer; }
     .pincode-close:hover { color: var(--ink); }
     .pincode-chart { display: grid; grid-template-columns: repeat(10, 1fr); gap: 1px; width: 150px; height: 150px; margin: 0 auto; padding: 3px; background: #e6e2d7; }
     .waffle-cell { min-width: 0; min-height: 0; }
     .pincode-table-wrap { min-height: 0; overflow: visible; border: 1px solid var(--line); background: #fffefa; }
-    .pincode-table { width: 100%; table-layout: fixed; border-collapse: collapse; font: 9px/1.15 Calibri; }
+    .pincode-table { width: 100%; table-layout: fixed; border-collapse: collapse; font: 9px/1.15 Calibri,sans-serif; }
     .pincode-table th:first-child, .pincode-table td:first-child { width: 48%; }
     .pincode-table th:last-child, .pincode-table td:last-child { width: 52%; }
     .pincode-table th, .pincode-table td { padding: 3px 4px; border-bottom: 1px solid var(--line); text-align: left; overflow-wrap: anywhere; }
@@ -55,18 +88,31 @@
     .activity-bar { height: 100%; min-width: 2px; }
     .activity-value { white-space: nowrap; color: var(--ink); }
     .pincode-table th { position: sticky; top: 0; background: #f4f1e8; color: var(--muted); }
-    .help-button { position: absolute; top: 0; right: 0; padding: 7px 11px; border: 1px solid var(--line); background: #fffefa; color: var(--ink); font: 700 11px Calibri; cursor: pointer; }
+
+    /* ── help ── */
+    .help-button { position: absolute; top: 0; right: 0; padding: 5px 9px; border: 1px solid var(--line); background: #fffefa; color: var(--ink); font: 700 10px Calibri,sans-serif; cursor: pointer; }
     .help-button:hover { border-color: var(--accent); }
     .help-modal { position: fixed; inset: 0; z-index: 8; display: grid; place-items: center; padding: 20px; background: rgba(23,32,29,.35); }
     .help-modal[hidden] { display: none; }
     .help-panel { width: min(430px, 100%); padding: 22px; background: #fffefa; border: 1px solid var(--line); box-shadow: 0 12px 40px rgba(23,32,29,.2); }
     .help-panel h2 { margin: 0 0 12px; font-size: 22px; font-weight: 500; }
     .help-panel p { margin: 0 0 12px; font-size: 14px; line-height: 1.45; color: var(--muted); }
-    .help-close { padding: 7px 11px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font: 700 11px Calibri; cursor: pointer; }
+    .help-close { padding: 7px 11px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font: 700 11px Calibri,sans-serif; cursor: pointer; }
+
+    /* ── misc ── */
     #map { min-width: 0; height: 100%; background: #dce4df; }
     .maplibregl-ctrl-group { border-radius: 0; box-shadow: 0 2px 8px rgba(23,32,29,.12); }
-    .status { position: absolute; left: 330px; bottom: 20px; z-index: 3; max-width: min(480px, calc(100% - 350px)); padding: 9px 12px; background: rgba(23,32,29,.9); color: #fff; font: 12px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace; }
-    @media (max-width: 700px) { .shell { grid-template-columns: 1fr; grid-template-rows: minmax(0, auto) minmax(0, 1fr); } aside { gap: 12px; max-height: 45vh; min-height: 0; overflow: hidden; padding: 16px; border-right: 0; border-bottom: 1px solid var(--line); } aside section { display: flex; flex: 1; min-height: 0; flex-direction: column; } .intro { display: none; } h1 { font-size: 24px; } .layers { flex: 1; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); max-height: none; overflow: auto; } .pincode-inspector { top: 12px; right: 12px; width: min(300px, calc(100% - 24px)); max-height: calc(100% - 24px); } .status { left: 16px; bottom: 16px; max-width: calc(100% - 32px); } }
+    .status { position: absolute; left: 310px; bottom: 20px; z-index: 3; max-width: min(480px, calc(100% - 330px)); padding: 9px 12px; background: rgba(23,32,29,.9); color: #fff; font: 12px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace; }
+    .empty { padding: 10px 0; font-size: 13px; color: var(--muted); }
+
+    @media (max-width: 700px) {
+      .shell { grid-template-columns: 1fr; grid-template-rows: minmax(0,auto) minmax(0,1fr); }
+      aside { gap: 10px; max-height: 42vh; min-height: 0; overflow: hidden; padding: 14px; border-right: 0; border-bottom: 1px solid var(--line); }
+      .intro { display: none; }
+      h1 { font-size: 20px; }
+      .pincode-inspector { top: 12px; right: 12px; width: min(300px, calc(100% - 24px)); max-height: calc(100% - 24px); }
+      .status { left: 16px; bottom: 16px; max-width: calc(100% - 32px); }
+    }
   </style>
 </head>
 <body>
@@ -75,1104 +121,1077 @@
       <header>
         <p class="eyebrow">Interactive Map</p>
         <h1>Maharashtra Economic Activity</h1>
-        <p class="intro">Exploring links between satellite imagery and economic data</p>
+        <p class="intro">Satellite imagery linked to economic data</p>
         <button id="help-button" class="help-button" type="button">Help</button>
       </header>
-      <section>
-        <p class="section-label">Industry categories</p>
-        <div id="category-legend" class="category-legend" aria-label="General industry category colors"></div>
-      </section>
-      <section>
-        <p class="section-label">Layers</p>
-        <div id="layers" class="layers" aria-live="polite"><div class="empty">Reading data folder...</div></div>
-      </section>
+
+      <!-- Category legend collapsible -->
+      <div>
+        <button class="cat-legend-toggle" id="cat-legend-toggle" aria-expanded="false" aria-controls="category-legend">
+          <span class="chevron">▶</span> Industry categories
+        </button>
+        <div id="category-legend" class="category-legend" hidden aria-label="General industry category colors"></div>
+      </div>
+
+      <!-- Layers -->
+      <div style="display:flex;flex-direction:column;gap:0;flex-shrink:0;">
+        <p class="section-label" style="margin-bottom:4px;">Layers</p>
+      </div>
+      <div id="layers" class="layers-scroll" aria-live="polite">
+        <div class="empty">Reading data folder…</div>
+      </div>
     </aside>
+
     <div id="map"></div>
+
     <section id="pincode-inspector" class="pincode-inspector" hidden aria-live="polite">
       <div class="pincode-heading">
-    <h2 id="pincode-title" class="pincode-title"></h2>
-    <p id="pincode-total" class="pincode-total"></p>
-    <button type="button" id="pincode-close" class="pincode-close" aria-label="Close">
-      ×
-    </button>
-  </div>
+        <h2 id="pincode-title" class="pincode-title"></h2>
+        <p id="pincode-total" class="pincode-total"></p>
+        <button type="button" id="pincode-close" class="pincode-close" aria-label="Close">×</button>
+      </div>
       <div id="pincode-chart" class="pincode-chart" role="img" aria-label="Pincode industry category breakdown"></div>
-      <div class="pincode-table-wrap"><table class="pincode-table"><thead><tr><th># Activities</th><th>General Category</th></tr></thead><tbody id="pincode-table-body"></tbody></table></div>
+      <div class="pincode-table-wrap">
+        <table class="pincode-table">
+          <thead><tr><th># Activities</th><th>General Category</th></tr></thead>
+          <tbody id="pincode-table-body"></tbody>
+        </table>
+      </div>
     </section>
   </main>
+
   <div id="status" class="status" hidden></div>
+
   <div id="help-modal" class="help-modal" hidden>
     <div class="help-panel" role="dialog" aria-modal="true" aria-labelledby="help-title">
       <h2 id="help-title">Information</h2>
-      <p>Toggle layers from the sidebar. The pincode activity layer shows a 10x10 waffle at each pincode centroid; each square represents one percent of that pincode's recorded activity.</p>
-      <p>For layers labeled "PMTILES", zoom in to the urban scale to see detail.</p>
+      <p>Toggle layers from the sidebar. The pincode activity layer shows a 10×10 waffle at each pincode centroid; each square represents one percent of that pincode's recorded activity.</p>
+      <p>For layers labeled "pmtiles", zoom in to the urban scale to see detail.</p>
       <p>Hover a pincode to see its category totals and percentages. The sidebar legend keeps category colors consistent between the map and the detail table.</p>
       <button id="help-close" class="help-close" type="button">Close</button>
     </div>
   </div>
+
   <script src="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"></script>
-    <script src="https://unpkg.com/pmtiles@4.5.0/dist/pmtiles.js"></script>
+  <script src="https://unpkg.com/pmtiles@4.5.0/dist/pmtiles.js"></script>
   <script src="https://unpkg.com/geotiff@2.1.3/dist-browser/geotiff.js"></script>
   <script src="https://unpkg.com/proj4@2.11.0/dist/proj4.js"></script>
   <script>
-const pmtilesProtocol = new pmtiles.Protocol({
-  metadata: true
-});
+// ─────────────────────────────────────────────────────────────────────────────
+// PMTiles protocol
+// ─────────────────────────────────────────────────────────────────────────────
+const pmtilesProtocol = new pmtiles.Protocol({ metadata: true });
+maplibregl.addProtocol('pmtiles', pmtilesProtocol.tile);
 
-maplibregl.addProtocol(
-  'pmtiles',
-  pmtilesProtocol.tile
-);
-    const map = new maplibregl.Map({
+// ─────────────────────────────────────────────────────────────────────────────
+// Map
+// ─────────────────────────────────────────────────────────────────────────────
+const map = new maplibregl.Map({
   container: 'map',
   style: {
     version: 8,
-
     sources: {
-      osm: {
-        type: 'raster',
-        tiles: [
-          'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
-        ],
-        tileSize: 256,
-        attribution: '© OpenStreetMap contributors'
-      },
-
-      satellite: {
-        type: 'raster',
-        tiles: [
-          'https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{y}/{x}.jpg'
-        ],
-        tileSize: 256,
-        attribution: 'Sentinel-2 cloudless © EOX'
-      }
+      osm: { type: 'raster', tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, attribution: '© OpenStreetMap contributors' },
+      satellite: { type: 'raster', tiles: ['https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{y}/{x}.jpg'], tileSize: 256, attribution: 'Sentinel-2 cloudless © EOX' }
     },
-
     layers: [
-      {
-        id: 'osm-basemap',
-        type: 'raster',
-        source: 'osm'
-      },
-      {
-        id: 'satellite-basemap',
-        type: 'raster',
-        source: 'satellite',
-        layout: {
-          visibility: 'none'
-        }
-      }
+      { id: 'osm-basemap', type: 'raster', source: 'osm' },
+      { id: 'satellite-basemap', type: 'raster', source: 'satellite', layout: { visibility: 'none' } }
     ]
   },
-
   center: [76.3002, 18.9],
   zoom: 5.85,
   attributionControl: true
 });
 
-    const layerControl = {
+// basemap switcher
+const layerControl = {
   onAdd(map) {
     this._map = map;
-
     const container = document.createElement('div');
     container.className = 'maplibregl-ctrl maplibregl-ctrl-group';
-
-    container.innerHTML = `
-      <select title="Basemap" style="
-        height: 29px;
-        border: 0;
-        padding: 0 8px;
-        font-size: 12px;
-        background: white;
-        cursor: pointer;
-      ">
-        <option value="osm">OpenStreetMap</option>
-        <option value="satellite">Satellite</option>
-      </select>
-    `;
-
-    const select = container.querySelector('select');
-
-    select.addEventListener('change', e => {
-      const satellite = e.target.value === 'satellite';
-
-      map.setLayoutProperty(
-        'osm-basemap',
-        'visibility',
-        satellite ? 'none' : 'visible'
-      );
-
-      map.setLayoutProperty(
-        'satellite-basemap',
-        'visibility',
-        satellite ? 'visible' : 'none'
-      );
+    container.innerHTML = `<select title="Basemap" style="height:29px;border:0;padding:0 8px;font-size:12px;background:white;cursor:pointer;"><option value="osm">OpenStreetMap</option><option value="satellite">Satellite</option></select>`;
+    container.querySelector('select').addEventListener('change', e => {
+      const sat = e.target.value === 'satellite';
+      map.setLayoutProperty('osm-basemap', 'visibility', sat ? 'none' : 'visible');
+      map.setLayoutProperty('satellite-basemap', 'visibility', sat ? 'visible' : 'none');
     });
-
     return container;
   },
-
-  onRemove() {
-    this._map = undefined;
-  }
+  onRemove() { this._map = undefined; }
 };
-
 map.addControl(layerControl, 'top-right');
 
-    const layerPanel = document.querySelector('#layers');
-    const status = document.querySelector('#status');
-    let pincodeLabelPopup;
-    const pincodeInspector = document.querySelector('#pincode-inspector');
-    document.querySelector('#pincode-close').addEventListener('click', () => { pincodeInspector.hidden = true; });
-    const helpModal = document.querySelector('#help-modal');
-    document.querySelector('#help-button').addEventListener('click', () => { helpModal.hidden = false; });
-    document.querySelector('#help-close').addEventListener('click', () => { helpModal.hidden = true; });
-    helpModal.addEventListener('click', event => { if (event.target === helpModal) helpModal.hidden = true; });
-    const loaded = new Map();
-    const rasterRenderCache = new Map();
-    const layerManifest = new Map();
-    const pincodeActivityCache = new Map();
-    const pmtilesDirectory = 'data/processed/pmtiles';
-    const cacheBust = Date.now().toString();
-    const industryCategories = [
-      ['A. Agriculture, Forestry & Fishing', '#2f6f4e'],
-      ['B. Mining & Quarrying', '#7b5b3e'],
-      ['C. Manufacturing', '#d75a3a'],
-      ['D_E. Electricity, Gas, Water & Waste', '#d39b32'],
-      ['F. Construction', '#9b6b43'],
-      ['G. Wholesale & Retail Trade', '#356f8a'],
-      ['H. Transportation & Storage', '#6b4c9a'],
-      ['I. Accommodation & Food Services', '#b84d72'],
-      ['J. Information & Communication', '#277f7a'],
-      ['K. Financial & Insurance', '#396b9c'],
-      ['L. Real Estate', '#8b7561'],
-      ['M. Professional, Scientific & Technical', '#557a42'],
-      ['N. Administrative & Support Services', '#aa6c2d'],
-      ['O. Public Administration & Defence', '#5b6575'],
-      ['P. Education', '#c06b3c'],
-      ['Q. Human Health & Social Work', '#3d8b86'],
-      ['R. Arts, Entertainment & Recreation', '#8c4d87'],
-      ['S. Other Service Activities', '#69752d']
-    ]; 
-    const industryColors = new Map(
-  industryCategories.map(([category, hex]) => {
-    const value = hex.slice(1);
+// ─────────────────────────────────────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────────────────────────────────────
+const layerPanel        = document.querySelector('#layers');
+const status            = document.querySelector('#status');
+let   pincodeLabelPopup;
+const pincodeInspector  = document.querySelector('#pincode-inspector');
+document.querySelector('#pincode-close').addEventListener('click', () => { pincodeInspector.hidden = true; });
+const helpModal = document.querySelector('#help-modal');
+document.querySelector('#help-button').addEventListener('click', () => { helpModal.hidden = false; });
+document.querySelector('#help-close').addEventListener('click',  () => { helpModal.hidden = true; });
+helpModal.addEventListener('click', e => { if (e.target === helpModal) helpModal.hidden = true; });
 
-    return [
-      category,
-      [
-        parseInt(value.slice(0, 2), 16),
-        parseInt(value.slice(2, 4), 16),
-        parseInt(value.slice(4, 6), 16)
-      ]
-    ];
-  })
-);
-    const sourceProjection = '+proj=moll +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs';
-    const rasterRamps = [
-      { match: /built_s_nres/i, color: [196, 96, 255, 235] },
-      { match: /built_s/i, color: [166, 102, 62, 235] },
-      { match: /pop/i, color: [118, 42, 131, 235] },
-      { match: /.*/, color: [39, 111, 108, 235] }
-    ];
-    const layerMetadata = [
-      { match: /built_s_nres/i, title: 'Built Non-Residential Surface Change (2000-2025)', citation: 'Source: built_s_nres_2025_2000_cog.tif. Clipped to the Maharashtra boundary.' },
-      { match: /built_s/i, title: 'Built Surface Change (2000-2025)', citation: 'Source: built_s_2025_2000_cog.tif. Clipped to the Maharashtra boundary.' },
-      { match: /pop/i, title: 'Population (2025)', citation: 'Source: pop_2025_cog.tif. Clipped to the Maharashtra boundary.' },
-      { match: /nightlights/i, title: 'Nightlights (West India, 2025)', citation: 'Source: nightlights_west_india_2025_cog.tif. Clipped to the Maharashtra boundary.' },
-      { match: /pincodes_aurangabad/i, title: 'Aurangabad Pincode Boundaries', citation: 'Source: pincodes_aurangabad.geojson.' }
-    ];
+const loaded               = new Map();
+const rasterRenderCache    = new Map();
+const layerManifest        = new Map();
+const pincodeActivityCache = new Map();
+const pmtilesDirectory     = 'data/processed/pmtiles';
+const cacheBust            = Date.now().toString();
 
-    function renderIndustryLegend() {
-      const legend = document.querySelector('#category-legend');
-      industryCategories.forEach(([category, color]) => {
-        const row = document.createElement('div'); row.className = 'category-key';
-        const swatch = document.createElement('span'); swatch.className = 'category-swatch'; swatch.style.background = color;
-        const label = document.createElement('span'); label.textContent = category;
-        row.append(swatch, label); legend.append(row);
-      });
-    }
+// ─────────────────────────────────────────────────────────────────────────────
+// Industry categories
+// ─────────────────────────────────────────────────────────────────────────────
+const industryCategories = [
+  ['A. Agriculture, Forestry & Fishing',       '#2f6f4e'],
+  ['B. Mining & Quarrying',                    '#7b5b3e'],
+  ['C. Manufacturing',                         '#d75a3a'],
+  ['D_E. Electricity, Gas, Water & Waste',     '#d39b32'],
+  ['F. Construction',                          '#9b6b43'],
+  ['G. Wholesale & Retail Trade',              '#356f8a'],
+  ['H. Transportation & Storage',              '#6b4c9a'],
+  ['I. Accommodation & Food Services',         '#b84d72'],
+  ['J. Information & Communication',           '#277f7a'],
+  ['K. Financial & Insurance',                 '#396b9c'],
+  ['L. Real Estate',                           '#8b7561'],
+  ['M. Professional, Scientific & Technical',  '#557a42'],
+  ['N. Administrative & Support Services',     '#aa6c2d'],
+  ['O. Public Administration & Defence',       '#5b6575'],
+  ['P. Education',                             '#c06b3c'],
+  ['Q. Human Health & Social Work',            '#3d8b86'],
+  ['R. Arts, Entertainment & Recreation',      '#8c4d87'],
+  ['S. Other Service Activities',              '#69752d']
+];
 
-    function showStatus(message, isError = false) {
-      status.textContent = message;
-      status.hidden = false;
-      status.style.background = isError ? '#9b382a' : 'rgba(23,32,29,.9)';
-      if (!isError) window.setTimeout(() => { status.hidden = true; }, 3500);
-    }
-
-    function fileType(filename) {
-      const extension = filename.split('.').pop().toLowerCase();
-      if (extension === 'geojson' || extension === 'json') return 'vector';
-      if (extension === 'tif' || extension === 'tiff' || extension === 'geotiff') return 'raster';
-       if (extension === 'pmtiles') return 'pmtiles';
-      if (extension === 'parquet') return 'parquet';
-      return null;
-    }
-
-    function displayName(path) {
-      return decodeURIComponent(path.split('/').pop()).replace(/\.(geojson|json|tiff?|geotiff|parquet|pmtiles)$/i, '').replace(/[_-]+/g, ' ');
-    }
-
-    function metadataFor(path) {
-      const filename = path.split('/').pop();
-       const manifestEntry = layerManifest.get(path);
-       if (manifestEntry) return manifestEntry;
-      return layerMetadata.find(metadata => metadata.match.test(filename)) || {
-        title: displayName(path),
-        citation: `Source: ${filename}.`
-      };
-    }
-
-    async function discoverFiles() {
-      const manifestResponse = await fetch(
-        `data/layers.json?v=${cacheBust}`,
-        { cache: 'no-store' }
-      );
-
-      if (!manifestResponse.ok) {
-        throw new Error(
-          `Could not load data/layers.json: ${manifestResponse.status}`
-        );
-      }
-
-      const manifest = await manifestResponse.json();
-
-      layerManifest.clear();
-
-      manifest.forEach(entry => {
-        layerManifest.set(entry.file, entry);
-      });
-
-      return manifest.map(entry => entry.file);
-    }
-
-    async function loadPincodeActivity(path) {
-      if (pincodeActivityCache.size > 0) {
-        return pincodeActivityCache;
-      }
-
-      const response = await fetch(`data/${encodeURI(path)}?v=${cacheBust}`);
-
-      if (!response.ok) {
-        throw new Error(`Could not load pincode activity data: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      Object.entries(data).forEach(([pincode, activity]) => {
-        pincodeActivityCache.set(String(pincode), activity);
-      });
-
-      return pincodeActivityCache;
-    }
-
-    function addVectorLayer(path, checked) {
-      const key = `vector-${path}`;
-      const metadata = metadataFor(path);
-      const vectorStyle = 
-  metadata.vectorStyle === 'state-boundary'
-    ? { lineColor: '#111', lineWidth: 2, fillOpacity: 0 }
-  : metadata.vectorStyle === 'state-boundary-other'
-    ? { lineColor: '#777', lineWidth: 1.2, fillOpacity: 0 }
-  : metadata.vectorStyle === 'roads'
-    ? { lineColor: '#786A51', lineWidth: 1.2, fillOpacity: 0 }
-    : metadata.vectorStyle === 'rail'
-    ? { lineColor: '#B34029', lineWidth: 1.2, fillOpacity: 0 }
-  : metadata.vectorStyle === 'pincode-activity'
-    ? { lineColor: '#d75a3a', lineWidth: 1, fillOpacity: 0 }
-  : metadata.vectorStyle === 'urban-population'
-    ? { lineColor: '#7c2a83', lineWidth: 1.5, fillColor: '#7c2a83', fillOpacity: 0.2 }
-  : metadata.vectorStyle === 'urban-built'
-    ? { lineColor: '#a6663e', lineWidth: 1.5, fillColor: '#a6663e', fillOpacity: 0.2 }
-  : metadata.vectorStyle === 'urban-built-change'
-    ? { lineColor: '#8c5a3c', lineWidth: 1.5, fillColor: '#8c5a3c', fillOpacity: 0.2 }
-  : metadata.vectorStyle === 'urban-nres'
-    ? { lineColor: '#c460ff', lineWidth: 1.5, fillColor: '#c460ff', fillOpacity: 0.2 }
-  : metadata.vectorStyle === 'urban-nightlights'
-    ? { lineColor: '#ffbe37', lineWidth: 1.5, fillColor: '#ffbe37', fillOpacity: 0.2 }
-  : { lineColor: '#8d3327', lineWidth: 2, fillOpacity: 0 };
-      map.addSource(key, { type: 'geojson', data: `data/${encodeURI(metadata.url || path)}` });
-      map.addLayer({ 
-  id: `${key}-fill`, 
-  type: 'fill', 
-  source: key, 
-  filter: ['==', '$type', 'Polygon'], 
-  paint: { 
-    'fill-color': vectorStyle.fillColor || '#000000',
-    'fill-opacity': vectorStyle.fillOpacity ?? 0
-  } 
-});
-      map.addLayer({ id: `${key}-line`, type: 'line', source: key, filter: ['in', '$type', 'LineString', 'Polygon'], paint: { 'line-color': vectorStyle.lineColor, 'line-width': vectorStyle.lineWidth } });
-      map.addLayer({ id: `${key}-point`, type: 'circle', source: key, filter: ['==', '$type', 'Point'], paint: { 'circle-color': '#17201d', 'circle-radius': 5, 'circle-stroke-color': '#fffefa', 'circle-stroke-width': 1 } });
-      const entry = {
-  key,
-  type: 'vector',
-  extraLayerIds: []
+const categoryIdMap = {
+  'A. Agriculture, Forestry & Fishing':       'A',
+  'B. Mining & Quarrying':                    'B',
+  'C. Manufacturing':                         'C',
+  'D_E. Electricity, Gas, Water & Waste':     'DE',
+  'F. Construction':                          'F',
+  'G. Wholesale & Retail Trade':              'G',
+  'H. Transportation & Storage':              'H',
+  'I. Accommodation & Food Services':         'I',
+  'J. Information & Communication':           'J',
+  'K. Financial & Insurance':                 'K',
+  'L. Real Estate':                           'L',
+  'M. Professional, Scientific & Technical':  'M',
+  'N. Administrative & Support Services':     'N',
+  'O. Public Administration & Defence':       'O',
+  'P. Education':                             'P',
+  'Q. Human Health & Social Work':            'Q',
+  'R. Arts, Entertainment & Recreation':      'R',
+  'S. Other Service Activities':              'S'
 };
 
-loaded.set(path, entry);
+const industryColors = new Map(
+  industryCategories.map(([cat, hex]) => {
+    const v = hex.slice(1);
+    return [cat, [parseInt(v.slice(0,2),16), parseInt(v.slice(2,4),16), parseInt(v.slice(4,6),16)]];
+  })
+);
 
-if (metadata.vectorStyle === 'pincode-activity') {
-  loadPincodeActivity(metadata.activityData)
-  .then(() => addPincodeMapOverlays(key, path))
-  .catch(error => showStatus(error.message, true));
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+const sourceProjection = '+proj=moll +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs';
+
+const rasterRamps = [
+  { match: /built_s_nres/i, color: [196, 96, 255, 235] },
+  { match: /built_s/i,      color: [166, 102, 62, 235] },
+  { match: /pop/i,          color: [118, 42, 131, 235] },
+  { match: /.*/,            color: [39, 111, 108, 235] }
+];
+
+const layerMetadata = [
+  { match: /built_s_nres/i,    title: 'Built Non-Residential Surface Change (2000–2025)', citation: 'Source: built_s_nres_2025_2000_cog.tif. Clipped to Maharashtra boundary.' },
+  { match: /built_s/i,         title: 'Built Surface Change (2000–2025)',                  citation: 'Source: built_s_2025_2000_cog.tif. Clipped to Maharashtra boundary.' },
+  { match: /pop/i,             title: 'Population (2025)',                                  citation: 'Source: pop_2025_cog.tif. Clipped to Maharashtra boundary.' },
+  { match: /nightlights/i,     title: 'Nightlights (West India, 2025)',                    citation: 'Source: nightlights_west_india_2025_cog.tif. Clipped to Maharashtra boundary.' },
+  { match: /pincodes_aurangabad/i, title: 'Aurangabad Pincode Boundaries',                 citation: 'Source: pincodes_aurangabad.geojson.' }
+];
+
+function showStatus(msg, isError = false) {
+  status.textContent = msg;
+  status.hidden = false;
+  status.style.background = isError ? '#9b382a' : 'rgba(23,32,29,.9)';
+  if (!isError) window.setTimeout(() => { status.hidden = true; }, 3500);
 }
 
-['fill', 'line', 'point'].forEach(kind => {
-  map.setLayoutProperty(
-    `${key}-${kind}`,
-    'visibility',
-    checked ? 'visible' : 'none'
-  );
-});
-
-if (metadata.vectorStyle === 'pincode-activity') {
-  addPincodeHover(key);
+function fileType(filename) {
+  const ext = filename.split('.').pop().toLowerCase();
+  if (ext === 'geojson' || ext === 'json') return 'vector';
+  if (ext === 'tif' || ext === 'tiff' || ext === 'geotiff') return 'raster';
+  if (ext === 'pmtiles') return 'pmtiles';
+  if (ext === 'parquet') return 'parquet';
+  return null;
 }
-    }
+
+function displayName(path) {
+  return decodeURIComponent(path.split('/').pop()).replace(/\.(geojson|json|tiff?|geotiff|parquet|pmtiles)$/i, '').replace(/[_-]+/g, ' ');
+}
+
+function metadataFor(path) {
+  const filename = path.split('/').pop();
+  const manifestEntry = layerManifest.get(path);
+  if (manifestEntry) return manifestEntry;
+  return layerMetadata.find(m => m.match.test(filename)) || { title: displayName(path), citation: `Source: ${filename}.` };
+}
+
+function rasterStyleFor(path) {
+  const m = layerManifest.get(path);
+  if (m?.color) return m;
+  const filename = path.split('/').pop();
+  return rasterRamps.find(r => r.match.test(filename));
+}
+
+function rasterRampFor(path)  { return rasterStyleFor(path).color; }
+
+function rampCssColor(path) {
+  const c = rasterStyleFor(path).color;
+  return `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
+}
+
+function colorFor(value, min, max, color, negativeColor, positiveColor) {
+  if (negativeColor && positiveColor) {
+    const rampColor = value < 0 ? negativeColor : positiveColor;
+    const range = value < 0 ? Math.abs(min) : max;
+    const ratio = Math.max(0, Math.min(1, Math.abs(value) / (range || 1)));
+    return [rampColor[0], rampColor[1], rampColor[2], rampColor[3] * ratio];
+  }
+  const ratio = Math.max(0, Math.min(1, (value - min) / (max - min || 1)));
+  return [color[0], color[1], color[2], color[3] * ratio];
+}
+
+function waitForIdle() {
+  return new Promise(resolve => {
+    if ('requestIdleCallback' in window) window.requestIdleCallback(resolve, { timeout: 1000 });
+    else window.setTimeout(resolve, 0);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Discover files
+// ─────────────────────────────────────────────────────────────────────────────
+async function discoverFiles() {
+  const res = await fetch(`data/layers.json?v=${cacheBust}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`Could not load data/layers.json: ${res.status}`);
+  const manifest = await res.json();
+  layerManifest.clear();
+  manifest.forEach(entry => layerManifest.set(entry.file, entry));
+  return manifest.map(entry => entry.file);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Pincode activity
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadPincodeActivity(path) {
+  if (pincodeActivityCache.size > 0) return pincodeActivityCache;
+  const res = await fetch(`data/${encodeURI(path)}?v=${cacheBust}`);
+  if (!res.ok) throw new Error(`Could not load pincode activity data: ${res.status}`);
+  const data = await res.json();
+  Object.entries(data).forEach(([pincode, activity]) => pincodeActivityCache.set(String(pincode), activity));
+  return pincodeActivityCache;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Vector layers
+// ─────────────────────────────────────────────────────────────────────────────
+const vectorStyleMap = {
+  'state-boundary':       { lineColor: '#111',    lineWidth: 2,   fillOpacity: 0 },
+  'state-boundary-other': { lineColor: '#777',    lineWidth: 1.2, fillOpacity: 0 },
+  'roads':                { lineColor: '#786A51', lineWidth: 1.2, fillOpacity: 0 },
+  'rail':                 { lineColor: '#B34029', lineWidth: 1.2, fillOpacity: 0 },
+  'pincode-activity':     { lineColor: '#d75a3a', lineWidth: 1,   fillOpacity: 0 },
+  'urban-population-A':   { lineColor: '#0072B2', lineWidth: 1.5, fillColor: '#7c2a83', fillOpacity: 0.2 },
+  'urban-population-B':   { lineColor: '#D55E00', lineWidth: 1.5, fillColor: '#7c2a83', fillOpacity: 0.2 },
+  'urban-built-A':        { lineColor: '#0072B2', lineWidth: 1.5, fillColor: '#a6663e', fillOpacity: 0.2 },
+  'urban-built-B':        { lineColor: '#D55E00', lineWidth: 1.5, fillColor: '#a6663e', fillOpacity: 0.2 },
+  'urban-built-change':   { lineColor: '#8c5a3c', lineWidth: 1.5, fillColor: '#8c5a3c', fillOpacity: 0.2 },
+  'urban-nres-A':         { lineColor: '#00A6D6', lineWidth: 1.5, fillColor: '#c460ff', fillOpacity: 0.2 },
+  'urban-nres-B':         { lineColor: '#D81B60', lineWidth: 1.5, fillColor: '#c460ff', fillOpacity: 0.2 },
+  'urban-nightlights':    { lineColor: '#ffbe37', lineWidth: 1.5, fillColor: '#ffbe37', fillOpacity: 0.2 },
+};
+
+function getVectorStyle(metadata) {
+  return vectorStyleMap[metadata.vectorStyle] || { lineColor: '#8d3327', lineWidth: 2, fillOpacity: 0 };
+}
+
+function addVectorLayer(path, checked) {
+  const key      = `vector-${path}`;
+  const metadata = metadataFor(path);
+  const vs       = getVectorStyle(metadata);
+
+  map.addSource(key, { type: 'geojson', data: `data/${encodeURI(metadata.url || path)}` });
+  map.addLayer({ id: `${key}-fill`,  type: 'fill',   source: key, filter: ['==', '$type', 'Polygon'],                  paint: { 'fill-color': vs.fillColor || '#000000', 'fill-opacity': vs.fillOpacity ?? 0 } });
+  map.addLayer({ id: `${key}-line`,  type: 'line',   source: key, filter: ['in', '$type', 'LineString', 'Polygon'],    paint: { 'line-color': vs.lineColor, 'line-width': vs.lineWidth } });
+  map.addLayer({ id: `${key}-point`, type: 'circle', source: key, filter: ['==', '$type', 'Point'],                    paint: { 'circle-color': '#17201d', 'circle-radius': 5, 'circle-stroke-color': '#fffefa', 'circle-stroke-width': 1 } });
+
+  const entry = { key, type: 'vector', extraLayerIds: [] };
+  loaded.set(path, entry);
+
+  ['fill', 'line', 'point'].forEach(kind => {
+    map.setLayoutProperty(`${key}-${kind}`, 'visibility', checked ? 'visible' : 'none');
+  });
+
+  if (metadata.vectorStyle === 'pincode-activity') {
+    loadPincodeActivity(metadata.activityData)
+      .then(() => addPincodeMapOverlays(key, path))
+      .catch(err => showStatus(err.message, true));
+    addPincodeHover(key);
+  }
+}
 
 function addPincodeHover(key) {
   const highlightKey = `${key}-highlight`;
-
-  map.addLayer({
-    id: highlightKey,
-    type: 'line',
-    source: key,
-    filter: ['==', ['get', 'pincode'], ''],
-    paint: {
-      'line-color': '#39ff14',
-      'line-width': 3.5,
-      'line-opacity': 0.98
-    }
-  });
+  map.addLayer({ id: highlightKey, type: 'line', source: key, filter: ['==', ['get', 'pincode'], ''], paint: { 'line-color': '#39ff14', 'line-width': 3.5, 'line-opacity': 0.98 } });
 
   map.on('mousemove', `${key}-fill`, event => {
     const feature = event.features?.[0];
     if (!feature) return;
-
     const pincode = String(feature.properties?.pincode || '');
-
     map.getCanvas().style.cursor = 'pointer';
-
-    map.setFilter(
-      highlightKey,
-      ['==', ['get', 'pincode'], pincode]
-    );
-
+    map.setFilter(highlightKey, ['==', ['get', 'pincode'], pincode]);
     if (!pincodeLabelPopup) {
-      pincodeLabelPopup = new maplibregl.Popup({
-        closeButton: false,
-        closeOnClick: false,
-        offset: 10
-      });
+      pincodeLabelPopup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10 });
     }
-
-    pincodeLabelPopup
-      .setLngLat(event.lngLat)
-      .setText(`Pincode ${pincode}`)
-      .addTo(map);
+    pincodeLabelPopup.setLngLat(event.lngLat).setText(`Pincode ${pincode}`).addTo(map);
   });
 
   map.on('click', `${key}-fill`, event => {
     const feature = event.features?.[0];
     if (!feature) return;
-
     const pincode = String(feature.properties?.pincode || '');
-
     const activity = pincodeActivityCache.get(pincode);
-
-    if (!activity) {
-      showStatus(
-        `No activity data found for pincode ${pincode}.`,
-        true
-      );
-      return;
-    }
-
-    showPincodeInspector({
-      pincode,
-      total: activity.total,
-      categories: activity.categories
-    });
+    if (!activity) { showStatus(`No activity data found for pincode ${pincode}.`, true); return; }
+    showPincodeInspector({ pincode, total: activity.total, categories: activity.categories });
   });
 
   map.on('mouseleave', `${key}-fill`, () => {
     map.getCanvas().style.cursor = '';
-
-    map.setFilter(
-      highlightKey,
-      ['==', ['get', 'pincode'], '']
-    );
-
+    map.setFilter(highlightKey, ['==', ['get', 'pincode'], '']);
     pincodeLabelPopup?.remove();
   });
 }
 
-    function waffleImageFromActivity(activity) {
-  const size = 60;
-  const total = Number(activity.total) || 0;
-  const categories = activity.categories || {};
-
+// ─────────────────────────────────────────────────────────────────────────────
+// Waffle image generation
+// ─────────────────────────────────────────────────────────────────────────────
+function waffleImageFromActivity(activity) {
+  const size   = 60;
+  const total  = Number(activity.total) || 0;
+  const cats   = activity.categories || {};
   const canvas = document.createElement('canvas');
-canvas.width = 10;
-canvas.height = 10;
-
-  const context = canvas.getContext('2d', {
-    willReadFrequently: false
-  });
-
-  const imageData = context.createImageData(size, size);
-  const pixels = imageData.data;
+  canvas.width = 10; canvas.height = 10;
+  const ctx    = canvas.getContext('2d', { willReadFrequently: false });
+  const imgData = ctx.createImageData(size, size);
+  const pixels  = imgData.data;
 
   const colors = [];
-
   industryCategories.forEach(([category, color]) => {
-    const categoryId = {
-      'A. Agriculture, Forestry & Fishing': 'A',
-      'B. Mining & Quarrying': 'B',
-      'C. Manufacturing': 'C',
-      'D_E. Electricity, Gas, Water & Waste': 'DE',
-      'F. Construction': 'F',
-      'G. Wholesale & Retail Trade': 'G',
-      'H. Transportation & Storage': 'H',
-      'I. Accommodation & Food Services': 'I',
-      'J. Information & Communication': 'J',
-      'K. Financial & Insurance': 'K',
-      'L. Real Estate': 'L',
-      'M. Professional, Scientific & Technical': 'M',
-      'N. Administrative & Support Services': 'N',
-      'O. Public Administration & Defence': 'O',
-      'P. Education': 'P',
-      'Q. Human Health & Social Work': 'Q',
-      'R. Arts, Entertainment & Recreation': 'R',
-      'S. Other Service Activities': 'S'
-    }[category];
-
-    const value = Number(categories[categoryId]) || 0;
+    const id    = categoryIdMap[category];
+    const value = Number(cats[id]) || 0;
     const count = Math.round(value / (total || 1) * 100);
-
-    for (let i = 0; i < count; i++) {
-      colors.push(color);
-    }
+    for (let i = 0; i < count; i++) colors.push(color);
   });
-
-  while (colors.length < 100) {
-    colors.push('#e6e2d7');
-  }
+  while (colors.length < 100) colors.push('#e6e2d7');
 
   const cellSize = size / 10;
-
   for (let index = 0; index < 100; index++) {
     const color = colors[index];
-
-    const match = color.match(/^#([0-9a-f]{6})$/i);
-
-    const r = parseInt(match[1].slice(0, 2), 16);
-    const g = parseInt(match[1].slice(2, 4), 16);
-    const b = parseInt(match[1].slice(4, 6), 16);
-
+    const m     = color.match(/^#([0-9a-f]{6})$/i);
+    const r = parseInt(m[1].slice(0,2), 16);
+    const g = parseInt(m[1].slice(2,4), 16);
+    const b = parseInt(m[1].slice(4,6), 16);
     const x0 = Math.floor((index % 10) * cellSize);
     const y0 = Math.floor(Math.floor(index / 10) * cellSize);
     const x1 = Math.floor((index % 10 + 1) * cellSize);
     const y1 = Math.floor((Math.floor(index / 10) + 1) * cellSize);
-
     for (let y = y0; y < y1; y++) {
       for (let x = x0; x < x1; x++) {
-        const offset = (y * size + x) * 4;
-
-        pixels[offset] = r;
-        pixels[offset + 1] = g;
-        pixels[offset + 2] = b;
-        pixels[offset + 3] = 255;
+        const off = (y * size + x) * 4;
+        pixels[off] = r; pixels[off+1] = g; pixels[off+2] = b; pixels[off+3] = 255;
       }
     }
   }
-
-  context.putImageData(imageData, 0, 0);
-
-  return {
-    width: size,
-    height: size,
-    data: pixels
-  };
+  ctx.putImageData(imgData, 0, 0);
+  return { width: size, height: size, data: pixels };
 }
 
-    async function addPincodeMapOverlays(key, path) {
-      const activity = pincodeActivityCache;
+async function addPincodeMapOverlays(key, path) {
+  const activity = pincodeActivityCache;
+  const res      = await fetch(`data/${encodeURI(metadataFor(path).url || path)}?v=${cacheBust}`);
+  if (!res.ok) throw new Error(`Could not load pincode boundaries: ${res.status}`);
+  const sourceData = await res.json();
+  if (!sourceData?.features) throw new Error('Pincode boundary GeoJSON contains no features.');
 
-      const response = await fetch(
-        `data/${encodeURI(metadataFor(path).url || path)}?v=${cacheBust}`
-      );
-
-      if (!response.ok) {
-        throw new Error(`Could not load pincode boundaries: ${response.status}`);
-      }
-
-      const sourceData = await response.json();
-
-      if (!sourceData?.features) {
-        throw new Error('Pincode boundary GeoJSON contains no features.');
-      }
-
-      const points = [];
-
-      sourceData.features.forEach(feature => {
-        const pincode = String(feature.properties?.pincode || '');
-        const pincodeActivity = activity.get(pincode);
-
-        if (!pincodeActivity) return;
-
-        points.push({
-          type: 'Feature',
-          properties: {
-            pincode,
-            imageId: `${key}-waffles-${pincode}`
-          },
-          geometry: {
-            type: 'Point',
-            coordinates: [
-              Number(pincodeActivity.lon),
-              Number(pincodeActivity.lat)
-            ]
-          }
-        });
-      });
-
-      const pointKey = `${key}-waffles`;
-
-      console.time('waffle-generation');
-
-const waffleImages = new Map();
-
-points.forEach(point => {
-  const pincode = point.properties.pincode;
-  const activity = pincodeActivityCache.get(pincode);
-
-  waffleImages.set(
-    pincode,
-    waffleImageFromActivity(activity)
-  );
-});
-
-console.timeEnd('waffle-generation');
-
-console.time('waffle-upload');
-
-points.forEach(point => {
-  const imageId = point.properties.imageId;
-  const pincode = point.properties.pincode;
-
-  if (!map.hasImage(imageId)) {
-    map.addImage(
-      imageId,
-      waffleImages.get(pincode),
-      { pixelRatio: 1 }
-    );
-  }
-});
-
-console.timeEnd('waffle-upload');
-
-      map.addSource(pointKey, {
-        type: 'geojson',
-        data: {
-          type: 'FeatureCollection',
-          features: points
-        }
-      });
-
-      map.addLayer({
-        id: pointKey,
-        type: 'symbol',
-        source: pointKey,
-        layout: {
-          'icon-image': ['get', 'imageId'],
-          'icon-size': 0.8,
-          'icon-allow-overlap': true,
-          'icon-ignore-placement': true,
-          'visibility': 'visible'
-        },
-        paint: {
-          'icon-opacity': 1
-        }
-      });
-
-const entry = loaded.get(path);
-
-if (entry) {
-  entry.extraLayerIds = [
-    ...(entry.extraLayerIds || []),
-    pointKey
-  ];
-}
-
-      console.log(`Created ${points.length} pincode waffles.`);
-    }
-
-function showPincodeInspector(activity) {
-  const inspector = document.querySelector('#pincode-inspector');
-
-  const pincode = String(activity.pincode || '');
-  const total = Number(activity.total) || 0;
-  const categories = activity.categories || {};
-
-  const slices = industryCategories.map(([category, color]) => {
-    const categoryId = {
-      'A. Agriculture, Forestry & Fishing': 'A',
-      'B. Mining & Quarrying': 'B',
-      'C. Manufacturing': 'C',
-      'D_E. Electricity, Gas, Water & Waste': 'DE',
-      'F. Construction': 'F',
-      'G. Wholesale & Retail Trade': 'G',
-      'H. Transportation & Storage': 'H',
-      'I. Accommodation & Food Services': 'I',
-      'J. Information & Communication': 'J',
-      'K. Financial & Insurance': 'K',
-      'L. Real Estate': 'L',
-      'M. Professional, Scientific & Technical': 'M',
-      'N. Administrative & Support Services': 'N',
-      'O. Public Administration & Defence': 'O',
-      'P. Education': 'P',
-      'Q. Human Health & Social Work': 'Q',
-      'R. Arts, Entertainment & Recreation': 'R',
-      'S. Other Service Activities': 'S'
-    }[category];
-
-    return {
-      category,
-      color,
-      value: Number(categories[categoryId]) || 0
-    };
+  const points = [];
+  sourceData.features.forEach(feature => {
+    const pincode = String(feature.properties?.pincode || '');
+    const act     = activity.get(pincode);
+    if (!act) return;
+    points.push({ type: 'Feature', properties: { pincode, imageId: `${key}-waffles-${pincode}` }, geometry: { type: 'Point', coordinates: [Number(act.lon), Number(act.lat)] } });
   });
 
-  document.querySelector('#pincode-title').textContent =
-    `Pincode ${pincode}`;
+  const pointKey    = `${key}-waffles`;
+  const waffleImages = new Map();
+  points.forEach(pt => { waffleImages.set(pt.properties.pincode, waffleImageFromActivity(pincodeActivityCache.get(pt.properties.pincode))); });
+  points.forEach(pt => { if (!map.hasImage(pt.properties.imageId)) map.addImage(pt.properties.imageId, waffleImages.get(pt.properties.pincode), { pixelRatio: 1 }); });
 
-  document.querySelector('#pincode-total').textContent =
-    `${total.toLocaleString()} activities`;
+  map.addSource(pointKey, { type: 'geojson', data: { type: 'FeatureCollection', features: points } });
+  map.addLayer({ id: pointKey, type: 'symbol', source: pointKey, layout: { 'icon-image': ['get', 'imageId'], 'icon-size': 0.8, 'icon-allow-overlap': true, 'icon-ignore-placement': true, 'visibility': 'visible' }, paint: { 'icon-opacity': 1 } });
 
-  // ----------------------------------------------------------
-  // Waffle
-  // ----------------------------------------------------------
+  const entry = loaded.get(path);
+  if (entry) entry.extraLayerIds = [...(entry.extraLayerIds || []), pointKey];
+  console.log(`Created ${points.length} pincode waffles.`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Pincode inspector
+// ─────────────────────────────────────────────────────────────────────────────
+function showPincodeInspector(activity) {
+  const pincode    = String(activity.pincode || '');
+  const total      = Number(activity.total) || 0;
+  const categories = activity.categories || {};
+
+  const slices = industryCategories.map(([category, color]) => ({
+    category,
+    color,
+    value: Number(categories[categoryIdMap[category]]) || 0
+  }));
+
+  document.querySelector('#pincode-title').textContent = `Pincode ${pincode}`;
+  document.querySelector('#pincode-total').textContent = `${total.toLocaleString()} activities`;
 
   const chart = document.querySelector('#pincode-chart');
   chart.replaceChildren();
-
   const waffleValues = [];
-
-  slices.forEach(slice => {
-    const count = Math.round(
-      slice.value / (total || 1) * 100
-    );
-
-    for (let index = 0; index < count; index += 1) {
-      waffleValues.push(slice.color);
-    }
+  slices.forEach(s => {
+    const count = Math.round(s.value / (total || 1) * 100);
+    for (let i = 0; i < count; i++) waffleValues.push(s.color);
   });
-
-  while (waffleValues.length < 100) {
-    waffleValues.push('#e6e2d7');
-  }
-
-  waffleValues
-    .slice(0, 100)
-    .forEach(color => {
-      const cell = document.createElement('span');
-
-      cell.className = 'waffle-cell';
-      cell.style.background = color;
-
-      chart.append(cell);
-    });
-
-  chart.setAttribute(
-    'aria-label',
-    `Industry breakdown for pincode ${pincode}`
-  );
-
-  // ----------------------------------------------------------
-  // Activity table
-  // ----------------------------------------------------------
+  while (waffleValues.length < 100) waffleValues.push('#e6e2d7');
+  waffleValues.slice(0, 100).forEach(color => {
+    const cell = document.createElement('span');
+    cell.className = 'waffle-cell';
+    cell.style.background = color;
+    chart.append(cell);
+  });
+  chart.setAttribute('aria-label', `Industry breakdown for pincode ${pincode}`);
 
   const body = document.querySelector('#pincode-table-body');
   body.replaceChildren();
+  slices.filter(s => s.value > 0).sort((a, b) => b.value - a.value).forEach(slice => {
+    const row         = document.createElement('tr');
+    const valueCell   = document.createElement('td');
+    const actCell     = document.createElement('div'); actCell.className = 'activity-cell';
+    const track       = document.createElement('div'); track.className = 'activity-bar-track';
+    const bar         = document.createElement('div'); bar.className = 'activity-bar';
+    const pct         = total ? slice.value / total * 100 : 0;
+    bar.style.width   = `${pct}%`;
+    bar.style.background = slice.color;
+    const val         = document.createElement('span'); val.className = 'activity-value';
+    val.textContent   = `${slice.value.toLocaleString()} (${pct.toFixed(1)}%)`;
+    track.append(bar);
+    actCell.append(track, val);
+    valueCell.append(actCell);
+    const catCell     = document.createElement('td'); catCell.textContent = slice.category;
+    row.append(valueCell, catCell);
+    body.append(row);
+  });
 
-  slices
-    .filter(slice => slice.value > 0)
-    .sort((a, b) => b.value - a.value)
-    .forEach(slice => {
-      const row = document.createElement('tr');
-
-      const valueCell = document.createElement('td');
-
-      const activityCell = document.createElement('div');
-      activityCell.className = 'activity-cell';
-
-      const barTrack = document.createElement('div');
-      barTrack.className = 'activity-bar-track';
-
-      const bar = document.createElement('div');
-      bar.className = 'activity-bar';
-
-      const percentage = total
-        ? slice.value / total * 100
-        : 0;
-
-      bar.style.width = `${percentage}%`;
-      bar.style.background = slice.color;
-
-      const value = document.createElement('span');
-      value.className = 'activity-value';
-
-      value.textContent =
-        `${slice.value.toLocaleString()} (${percentage.toFixed(1)}%)`;
-
-      barTrack.append(bar);
-      activityCell.append(barTrack, value);
-      valueCell.append(activityCell);
-
-      const categoryCell = document.createElement('td');
-      categoryCell.textContent = slice.category;
-
-      row.append(valueCell, categoryCell);
-      body.append(row);
-    });
-
-  inspector.hidden = false;
+  pincodeInspector.hidden = false;
 }
 
-    function rasterStyleFor(path) {
-       const manifestEntry = layerManifest.get(path);
-       if (manifestEntry?.color) return manifestEntry;
-      const filename = path.split('/').pop();
-      return rasterRamps.find(ramp => ramp.match.test(filename));
-    }
-
-    function rasterRampFor(path) {
-      return rasterStyleFor(path).color;
-    }
-
-    function rampCssColor(path) {
-      const style = rasterStyleFor(path);
-      const color = style.color;
-      return `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
-    }
-
-    function colorFor(value, min, max, color, negativeColor, positiveColor) {
-      if (negativeColor && positiveColor) {
-        const rampColor = value < 0 ? negativeColor : positiveColor;
-        const range = value < 0 ? Math.abs(min) : max;
-        const ratio = Math.max(0, Math.min(1, Math.abs(value) / (range || 1)));
-        return [rampColor[0], rampColor[1], rampColor[2], rampColor[3] * ratio];
-      }
-      const ratio = Math.max(0, Math.min(1, (value - min) / (max - min || 1)));
-      return [color[0], color[1], color[2], color[3] * ratio];
-    }
-
-    async function renderCog(path) {
-      const tiff = await GeoTIFF.fromUrl(`data/${encodeURIComponent(path.split('/').pop())}`);
-      const baseImage = await tiff.getImage();
-      let image = baseImage;
-      const imageCount = await tiff.getImageCount();
-      for (let index = 1; index < imageCount; index += 1) {
-        const overview = await tiff.getImage(index);
-        if (overview.getWidth() >= 500 && overview.getWidth() < image.getWidth()) image = overview;
-      }
-      const sourceBounds = baseImage.getBoundingBox();
-      const sourceWidth = image.getWidth();
-      const sourceHeight = image.getHeight();
-      const previewWidth = 900;
-      const previewHeight = Math.max(1, Math.round(previewWidth * sourceHeight / sourceWidth));
-      const raster = await image.readRasters({ width: previewWidth, height: previewHeight, samples: [0], interleave: true });
-      const noData = image.getGDALNoData ? image.getGDALNoData() : null;
-      const corners = [
-        proj4(sourceProjection, 'EPSG:4326', [sourceBounds[0], sourceBounds[1]]),
-        proj4(sourceProjection, 'EPSG:4326', [sourceBounds[2], sourceBounds[3]])
-      ];
-      const west = Math.min(corners[0][0], corners[1][0]);
-      const east = Math.max(corners[0][0], corners[1][0]);
-      const south = Math.min(corners[0][1], corners[1][1]);
-      const north = Math.max(corners[0][1], corners[1][1]);
-      const canvas = document.createElement('canvas');
-      canvas.width = previewWidth; canvas.height = previewHeight;
-      const context = canvas.getContext('2d');
-      const pixels = context.createImageData(previewWidth, previewHeight);
-      const color = rasterRampFor(path);
-      let min = Infinity, max = -Infinity;
-      for (const value of raster) {
-        if (Number.isFinite(value) && value !== noData) { min = Math.min(min, value); max = Math.max(max, value); }
-      }
-      for (let y = 0; y < previewHeight; y += 1) {
-        if (y % 16 === 0) await waitForIdle();
-        for (let x = 0; x < previewWidth; x += 1) {
-          const lon = west + (x / (previewWidth - 1)) * (east - west);
-          const lat = north - (y / (previewHeight - 1)) * (north - south);
-          const projected = proj4('EPSG:4326', sourceProjection, [lon, lat]);
-          const sourceX = Math.round((projected[0] - sourceBounds[0]) / (sourceBounds[2] - sourceBounds[0]) * (previewWidth - 1));
-          const sourceY = Math.round((sourceBounds[3] - projected[1]) / (sourceBounds[3] - sourceBounds[1]) * (previewHeight - 1));
-          const sourceIndex = sourceY * previewWidth + sourceX;
-          const outputIndex = (y * previewWidth + x) * 4;
-          const value = raster[sourceIndex];
-          if (sourceX < 0 || sourceX >= previewWidth || sourceY < 0 || sourceY >= previewHeight || !Number.isFinite(value) || value === noData) { pixels.data[outputIndex] = 255; pixels.data[outputIndex + 1] = 255; pixels.data[outputIndex + 2] = 255; pixels.data[outputIndex + 3] = 0; continue; }
-          const pixelColor = colorFor(value, min, max, color, style.negativeColor, style.positiveColor);
-          pixels.data[outputIndex] = pixelColor[0]; pixels.data[outputIndex + 1] = pixelColor[1]; pixels.data[outputIndex + 2] = pixelColor[2]; pixels.data[outputIndex + 3] = pixelColor[3];
-        }
-      }
-      context.putImageData(pixels, 0, 0);
-      return { url: canvas.toDataURL('image/png'), bounds: [west, south, east, north], min, max };
-    }
-
-    function renderedRasterFor(path) {
-      if (!rasterRenderCache.has(path)) {
-        const renderPromise = renderCog(path).catch(error => {
-          rasterRenderCache.delete(path);
-          throw error;
-        });
-        rasterRenderCache.set(path, renderPromise);
-      }
-      return rasterRenderCache.get(path);
-    }
-
+// ─────────────────────────────────────────────────────────────────────────────
+// PMTiles raster layer
+// ─────────────────────────────────────────────────────────────────────────────
 function addPmtilesRasterLayer(path, checked) {
-  const key = `raster-${path}`;
-  const metadata = metadataFor(path);
-
-  const archiveUrl = new URL(
-    `${pmtilesDirectory}/${path.split('/').pop()}`,
-    window.location.href
-  ).href;
-
+  const key        = `raster-${path}`;
+  const metadata   = metadataFor(path);
+  const archiveUrl = new URL(`${pmtilesDirectory}/${path.split('/').pop()}`, window.location.href).href;
   const pmtilesUrl = `pmtiles://${archiveUrl}`;
 
-  console.log('Adding PMTiles layer:', {
-    path,
-    key,
-    archiveUrl,
-    pmtilesUrl,
-    checked
-  });
+  map.addSource(key, { type: 'raster', url: pmtilesUrl, tileSize: 256 });
+  map.addLayer({ id: key, type: 'raster', source: key, layout: { visibility: checked ? 'visible' : 'none' }, paint: { 'raster-opacity': 0.86, 'raster-fade-duration': 0 } });
 
-  map.addSource(key, {
-    type: 'raster',
-    url: pmtilesUrl,
-    tileSize: 256
-  });
+  loaded.set(path, { key, type: 'raster' });
 
-  map.addLayer({
-    id: key,
-    type: 'raster',
-    source: key,
-    layout: {
-      visibility: checked ? 'visible' : 'none'
-    },
-    paint: {
-      'raster-opacity': 0.86,
-      'raster-fade-duration': 0
-    }
-  });
-
-  loaded.set(path, {
-    key,
-    type: 'raster'
-  });
-
-  // PMTiles metadata is loaded by the protocol itself.
-  // If your manifest contains bounds, use them for initial positioning.
   if (metadata.bounds && checked) {
-    map.fitBounds(
-      [
-        [metadata.bounds[0], metadata.bounds[1]],
-        [metadata.bounds[2], metadata.bounds[3]]
-      ],
-      {
-        padding: 20,
-        duration: 600
-      }
-    );
+    map.fitBounds([[metadata.bounds[0], metadata.bounds[1]], [metadata.bounds[2], metadata.bounds[3]]], { padding: 20, duration: 600 });
   }
-
-  // Force a style/render update after adding the source/layer.
-  map.setLayoutProperty(
-    key,
-    'visibility',
-    checked ? 'visible' : 'none'
-  );
-
+  map.setLayoutProperty(key, 'visibility', checked ? 'visible' : 'none');
   map.triggerRepaint();
 }
- 
-    function waitForIdle() {
-      return new Promise(resolve => {
-        if ('requestIdleCallback' in window) {
-          window.requestIdleCallback(resolve, { timeout: 1000 });
-        } else {
-          window.setTimeout(resolve, 0);
-        }
-      });
-    }
 
-    async function preloadRasterLayers(files) {
-      for (const path of files.filter(file => fileType(file) === 'raster')) {
-        await waitForIdle();
-        try {
-          await renderedRasterFor(path);
-        } catch (error) {
-          console.warn(`Could not preload ${displayName(path)}:`, error);
-        }
+// ─────────────────────────────────────────────────────────────────────────────
+// COG raster layer
+// ─────────────────────────────────────────────────────────────────────────────
+const rasterRenderCache2 = new Map();
+
+async function renderCog(path) {
+  const tiff = await GeoTIFF.fromUrl(`data/${encodeURIComponent(path.split('/').pop())}`);
+  const baseImage = await tiff.getImage();
+  let image = baseImage;
+  const imageCount = await tiff.getImageCount();
+  for (let i = 1; i < imageCount; i++) {
+    const ov = await tiff.getImage(i);
+    if (ov.getWidth() >= 500 && ov.getWidth() < image.getWidth()) image = ov;
+  }
+  const sourceBounds = baseImage.getBoundingBox();
+  const sourceWidth  = image.getWidth();
+  const sourceHeight = image.getHeight();
+  const pw = 900;
+  const ph = Math.max(1, Math.round(pw * sourceHeight / sourceWidth));
+  const raster = await image.readRasters({ width: pw, height: ph, samples: [0], interleave: true });
+  const noData = image.getGDALNoData ? image.getGDALNoData() : null;
+  const corners = [
+    proj4(sourceProjection, 'EPSG:4326', [sourceBounds[0], sourceBounds[1]]),
+    proj4(sourceProjection, 'EPSG:4326', [sourceBounds[2], sourceBounds[3]])
+  ];
+  const west  = Math.min(corners[0][0], corners[1][0]);
+  const east  = Math.max(corners[0][0], corners[1][0]);
+  const south = Math.min(corners[0][1], corners[1][1]);
+  const north = Math.max(corners[0][1], corners[1][1]);
+  const canvas = document.createElement('canvas');
+  canvas.width = pw; canvas.height = ph;
+  const ctx    = canvas.getContext('2d');
+  const pixels = ctx.createImageData(pw, ph);
+  const color  = rasterRampFor(path);
+  const style  = rasterStyleFor(path);
+  let min = Infinity, max = -Infinity;
+  for (const v of raster) { if (Number.isFinite(v) && v !== noData) { min = Math.min(min, v); max = Math.max(max, v); } }
+  for (let y = 0; y < ph; y++) {
+    if (y % 16 === 0) await waitForIdle();
+    for (let x = 0; x < pw; x++) {
+      const lon = west  + (x / (pw - 1)) * (east  - west);
+      const lat = north - (y / (ph - 1)) * (north - south);
+      const proj = proj4('EPSG:4326', sourceProjection, [lon, lat]);
+      const sx   = Math.round((proj[0] - sourceBounds[0]) / (sourceBounds[2] - sourceBounds[0]) * (pw - 1));
+      const sy   = Math.round((sourceBounds[3] - proj[1]) / (sourceBounds[3] - sourceBounds[1]) * (ph - 1));
+      const si   = sy * pw + sx;
+      const oi   = (y * pw + x) * 4;
+      const val  = raster[si];
+      if (sx < 0 || sx >= pw || sy < 0 || sy >= ph || !Number.isFinite(val) || val === noData) {
+        pixels.data[oi+3] = 0; continue;
       }
+      const pc = colorFor(val, min, max, color, style.negativeColor, style.positiveColor);
+      pixels.data[oi] = pc[0]; pixels.data[oi+1] = pc[1]; pixels.data[oi+2] = pc[2]; pixels.data[oi+3] = pc[3];
     }
+  }
+  ctx.putImageData(pixels, 0, 0);
+  return { url: canvas.toDataURL('image/png'), bounds: [west, south, east, north], min, max };
+}
 
-    async function addRasterLayer(path, checked) {
-       if (fileType(path) === 'pmtiles') {
-         addPmtilesRasterLayer(path, checked);
-         return;
-       }
-      showStatus(`Rendering ${displayName(path)}...`);
-      const rendered = await renderedRasterFor(path);
-      const key = `raster-${path}`;
-      map.addSource(key, { type: 'image', url: rendered.url, coordinates: [[rendered.bounds[0], rendered.bounds[3]], [rendered.bounds[2], rendered.bounds[3]], [rendered.bounds[2], rendered.bounds[1]], [rendered.bounds[0], rendered.bounds[1]]] });
-      map.addLayer({ id: key, type: 'raster', source: key, paint: { 'raster-opacity': .82, 'raster-fade-duration': 0 } });
-      map.setLayoutProperty(key, 'visibility', checked ? 'visible' : 'none');
-      loaded.set(path, { key, type: 'raster' });
-      updateLayerLegend(path, rendered.min, rendered.max);
-      map.fitBounds([[rendered.bounds[0], rendered.bounds[1]], [rendered.bounds[2], rendered.bounds[3]]], { padding: 60, duration: 600 });
-      showStatus(`${displayName(path)} loaded · values ${rendered.min.toFixed(2)}–${rendered.max.toFixed(2)}`);
-    }
+function renderedRasterFor(path) {
+  if (!rasterRenderCache.has(path)) {
+    const p = renderCog(path).catch(err => { rasterRenderCache.delete(path); throw err; });
+    rasterRenderCache.set(path, p);
+  }
+  return rasterRenderCache.get(path);
+}
 
+async function addRasterLayer(path, checked) {
+  if (fileType(path) === 'pmtiles') { addPmtilesRasterLayer(path, checked); return; }
+  showStatus(`Rendering ${displayName(path)}…`);
+  const rendered = await renderedRasterFor(path);
+  const key = `raster-${path}`;
+  map.addSource(key, { type: 'image', url: rendered.url, coordinates: [[rendered.bounds[0], rendered.bounds[3]], [rendered.bounds[2], rendered.bounds[3]], [rendered.bounds[2], rendered.bounds[1]], [rendered.bounds[0], rendered.bounds[1]]] });
+  map.addLayer({ id: key, type: 'raster', source: key, paint: { 'raster-opacity': .82, 'raster-fade-duration': 0 } });
+  map.setLayoutProperty(key, 'visibility', checked ? 'visible' : 'none');
+  loaded.set(path, { key, type: 'raster' });
+  updateLayerLegendValues(path, rendered.min, rendered.max);
+  map.fitBounds([[rendered.bounds[0], rendered.bounds[1]], [rendered.bounds[2], rendered.bounds[3]]], { padding: 60, duration: 600 });
+  showStatus(`${displayName(path)} loaded · values ${rendered.min.toFixed(2)}–${rendered.max.toFixed(2)}`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Toggle
+// ─────────────────────────────────────────────────────────────────────────────
 async function toggleLayer(path, checked) {
   const type = fileType(path);
-
-  if (type === 'parquet') {
-    showStatus(
-      'GeoParquet is detected but not enabled in this browser-only MVP.',
-      true
-    );
-    return;
-  }
-
-  if (!map.isStyleLoaded()) {
-    map.once('load', () => {
-      toggleLayer(path, checked);
-    });
-    return;
-  }
+  if (type === 'parquet') { showStatus('GeoParquet is not enabled in this browser-only build.', true); return; }
+  if (!map.isStyleLoaded()) { map.once('load', () => toggleLayer(path, checked)); return; }
 
   try {
     if (!loaded.has(path)) {
-      if (type === 'vector') {
-        addVectorLayer(path, checked);
-      } else if (type === 'raster') {
-        await addRasterLayer(path, checked);
-      } else if (type === 'pmtiles') {
-        addPmtilesRasterLayer(path, checked);
-      }
-
+      if (type === 'vector')   addVectorLayer(path, checked);
+      else if (type === 'raster')  await addRasterLayer(path, checked);
+      else if (type === 'pmtiles') addPmtilesRasterLayer(path, checked);
       map.triggerRepaint();
       return;
     }
 
     const entry = loaded.get(path);
-
-    const ids = entry.type === 'vector'
-      ? [
-          `${entry.key}-fill`,
-          `${entry.key}-line`,
-          `${entry.key}-point`,
-          ...(entry.extraLayerIds || [])
-        ]
+    const ids   = entry.type === 'vector'
+      ? [`${entry.key}-fill`, `${entry.key}-line`, `${entry.key}-point`, ...(entry.extraLayerIds || [])]
       : [entry.key];
 
-    console.log(
-      `Setting ${displayName(path)} visibility to ${checked ? 'visible' : 'none'}`,
-      ids
-    );
-
     for (const id of ids) {
-      if (!map.getLayer(id)) {
-        console.warn('Layer does not exist:', id);
-        continue;
-      }
-
-      map.setLayoutProperty(
-        id,
-        'visibility',
-        checked ? 'visible' : 'none'
-      );
+      if (!map.getLayer(id)) continue;
+      map.setLayoutProperty(id, 'visibility', checked ? 'visible' : 'none');
     }
-
     map.triggerRepaint();
-
-    // Useful diagnostic: verify that MapLibre actually accepted
-    // the visibility change.
-    for (const id of ids) {
-      if (map.getLayer(id)) {
-        console.log(
-          id,
-          'visibility =',
-          map.getLayoutProperty(id, 'visibility')
-        );
-      }
-    }
-
-  } catch (error) {
-    console.error('Layer toggle failed:', path, error);
-
-    showStatus(
-      `Could not load ${displayName(path)}: ${error.message}`,
-      true
-    );
+  } catch (err) {
+    console.error('Layer toggle failed:', path, err);
+    showStatus(`Could not load ${displayName(path)}: ${err.message}`, true);
   }
 }
 
-    function updateLayerLegend(path, min, max) {
-      const row = document.querySelector(`[data-layer-path="${CSS.escape(path)}"]`);
-      if (!row) return;
-      row.querySelector('.legend-min').textContent = Number.isFinite(min) ? min.toFixed(2) : 'No data';
-      row.querySelector('.legend-max').textContent = Number.isFinite(max) ? max.toFixed(2) : 'No data';
+function updateLayerLegendValues(path, min, max) {
+  const row = document.querySelector(`[data-layer-path="${CSS.escape(path)}"]`);
+  if (!row) return;
+  const minEl = row.querySelector('.legend-min');
+  const maxEl = row.querySelector('.legend-max');
+  if (minEl) minEl.textContent = Number.isFinite(min) ? min.toFixed(2) : 'No data';
+  if (maxEl) maxEl.textContent = Number.isFinite(max) ? max.toFixed(2) : 'No data';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Build legend symbol for a single layer row
+// ─────────────────────────────────────────────────────────────────────────────
+function buildLegendInline(path, metadata) {
+  const type   = fileType(path);
+  const vs     = metadata.vectorStyle ? getVectorStyle(metadata) : null;
+  const wrap   = document.createElement('div');
+  wrap.className = 'layer-legend-inline';
+
+  if (type === 'vector') {
+    const isLine    = ['state-boundary','state-boundary-other','roads','rail'].includes(metadata.vectorStyle);
+    const isPolygon = !isLine && metadata.vectorStyle && metadata.vectorStyle !== 'pincode-activity';
+
+    if (isLine) {
+      const swatch = document.createElement('span');
+      swatch.className = 'legend-line-swatch';
+      swatch.style.borderTopColor = vs.lineColor;
+      swatch.style.borderTopWidth = Math.max(1, Math.min(3, vs.lineWidth)) + 'px';
+      swatch.title = vs.lineColor;
+      wrap.append(swatch);
+    } else if (isPolygon) {
+      const swatch = document.createElement('span');
+      swatch.className = 'legend-fill-swatch';
+      swatch.style.background    = (vs.fillColor || vs.lineColor) + '33';
+      swatch.style.borderColor   = vs.lineColor;
+      swatch.style.borderWidth   = Math.max(1, Math.min(2, vs.lineWidth)) + 'px';
+      swatch.title = vs.fillColor || vs.lineColor;
+      wrap.append(swatch);
+    } else if (metadata.vectorStyle === 'pincode-activity') {
+      const swatch = document.createElement('span');
+      swatch.className = 'legend-line-swatch';
+      swatch.style.borderTopColor = vs.lineColor;
+      swatch.style.borderTopWidth = '1px';
+      swatch.style.borderTopStyle = 'dashed';
+      wrap.append(swatch);
+      const lbl = document.createElement('span');
+      lbl.style.cssText = 'font:9px Calibri,sans-serif;color:var(--muted)';
+      lbl.textContent = 'pincode boundaries';
+      wrap.append(lbl);
+    }
+  } else if (type === 'pmtiles' || type === 'raster') {
+    const rampDiv = document.createElement('div');
+    rampDiv.className = 'legend-ramp';
+
+    const bar = document.createElement('div');
+    bar.className = 'legend-ramp-bar';
+    const rStyle = rasterStyleFor(path);
+    const c = rStyle.color;
+    if (rStyle.negativeColor && rStyle.positiveColor) {
+      const nc = rStyle.negativeColor;
+      const pc = rStyle.positiveColor;
+      bar.style.background = `linear-gradient(90deg, rgb(${nc[0]},${nc[1]},${nc[2]}), transparent 50%, rgb(${pc[0]},${pc[1]},${pc[2]}))`;
+    } else {
+      bar.style.background = `linear-gradient(90deg, transparent, rgb(${c[0]},${c[1]},${c[2]}))`;
     }
 
-    function renderLayerControl(path, initiallyChecked) {
-      const type = fileType(path);
-      const metadata = metadataFor(path);
-      const row = document.createElement('div'); row.className = `layer${initiallyChecked ? ' active' : ''}`; row.dataset.layerPath = path;
-      const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = initiallyChecked; checkbox.disabled = type === 'parquet';
-      checkbox.setAttribute('aria-label', `Toggle ${metadata.title}`);
-      checkbox.addEventListener('change', () => { row.classList.toggle('active', checkbox.checked); row.querySelector('.layer-info').hidden = !checkbox.checked; toggleLayer(path, checkbox.checked); });
-      const name = document.createElement('span'); name.className = 'layer-name'; name.textContent = metadata.title;
-      const kind = document.createElement('span'); kind.className = 'layer-type'; kind.textContent = type;
-      const info = document.createElement('div'); info.className = 'layer-info'; info.hidden = !initiallyChecked;
-      const rasterStyle = rasterStyleFor(path);
-      const legend = document.createElement('div'); legend.className = `layer-legend${rasterStyle.negativeColor ? ' diverging' : ''}`; legend.hidden = type !== 'raster' && type !== 'pmtiles';
-      legend.style.setProperty('--legend-color', rampCssColor(path));
-      if (rasterStyle.negativeColor) legend.style.setProperty('--legend-negative-color', `rgb(${rasterStyle.negativeColor[0]}, ${rasterStyle.negativeColor[1]}, ${rasterStyle.negativeColor[2]})`);
-      if (rasterStyle.positiveColor) legend.style.setProperty('--legend-positive-color', `rgb(${rasterStyle.positiveColor[0]}, ${rasterStyle.positiveColor[1]}, ${rasterStyle.positiveColor[2]})`);
-      legend.innerHTML = '<div class="legend-bar" aria-label="Transparent to layer color"></div><div class="legend-values"><span class="legend-min">Loading...</span><span class="legend-max">Loading...</span></div>';
-      const citationButton = document.createElement('button'); citationButton.className = 'citation-button'; citationButton.type = 'button'; citationButton.textContent = 'i'; citationButton.title = 'Show source citation'; citationButton.setAttribute('aria-label', `Show source citation for ${metadata.title}`);
-      const citation = document.createElement('p'); citation.className = 'citation'; citation.hidden = true; citation.textContent = metadata.citation;
-      citationButton.addEventListener('click', event => { event.stopPropagation(); citation.hidden = !citation.hidden; });
-      info.append(legend, citationButton, citation);
-      row.append(checkbox, name, kind, info); layerPanel.append(row);
-      if (initiallyChecked && type !== 'parquet') toggleLayer(path, true);
+    const vals = document.createElement('div');
+    vals.className = 'legend-ramp-values';
+
+    const meta  = layerManifest.get(path);
+    const hasKnownRange = meta && Number.isFinite(meta.min) && Number.isFinite(meta.max);
+    const minLbl = document.createElement('span'); minLbl.className = 'legend-min';
+    const maxLbl = document.createElement('span'); maxLbl.className = 'legend-max';
+    minLbl.textContent = hasKnownRange ? meta.min.toFixed(1) : '—';
+    maxLbl.textContent = hasKnownRange ? meta.max.toFixed(1) : '—';
+    vals.append(minLbl, maxLbl);
+    rampDiv.append(bar, vals);
+    wrap.append(rampDiv);
+  }
+
+  return wrap;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Build a single layer row element
+// ─────────────────────────────────────────────────────────────────────────────
+function buildLayerRow(path, initiallyChecked) {
+  const type     = fileType(path);
+  const metadata = metadataFor(path);
+
+  const row = document.createElement('div');
+  row.className = `layer${initiallyChecked ? ' active' : ''}`;
+  row.dataset.layerPath = path;
+
+  const checkbox = document.createElement('input');
+  checkbox.type    = 'checkbox';
+  checkbox.checked = initiallyChecked;
+  checkbox.disabled = type === 'parquet';
+  checkbox.setAttribute('aria-label', `Toggle ${metadata.title}`);
+
+  const name = document.createElement('span');
+  name.className   = 'layer-name';
+  name.textContent = metadata.title;
+
+  // info tooltip button
+  const infoBtn = document.createElement('button');
+  infoBtn.className = 'layer-info-btn';
+  infoBtn.type      = 'button';
+  infoBtn.setAttribute('aria-label', `Source: ${metadata.title}`);
+  infoBtn.innerHTML = 'i';
+
+  const tooltip = document.createElement('span');
+  tooltip.className   = 'layer-tooltip';
+  tooltip.textContent = metadata.citation;
+  infoBtn.append(tooltip);
+
+  row.append(checkbox, name, infoBtn);
+
+  // legend (second row spanning col 2)
+  const legend = buildLegendInline(path, metadata);
+  if (legend.children.length) {
+    legend.style.gridColumn = '2 / 3';
+    row.style.gridTemplateRows = 'auto auto';
+    row.append(legend);
+  }
+
+  checkbox.addEventListener('change', () => {
+    row.classList.toggle('active', checkbox.checked);
+    name.style.color = checkbox.checked ? 'var(--ink)' : 'var(--muted)';
+    toggleLayer(path, checkbox.checked);
+  });
+
+  if (initiallyChecked && type !== 'parquet') toggleLayer(path, true);
+  return row;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Layer grouping config
+// ─────────────────────────────────────────────────────────────────────────────
+// Groups: each entry specifies which files belong together.
+// Files not matching any group render as standalone rows.
+const groupDefinitions = [
+  {
+    label: 'Maharashtra Boundary & States',
+    filePatterns: [
+      /maharashtra_boundary\.geojson/,
+      /INDIA_STATES\.geojson/
+    ]
+  },
+  {
+    label: 'Pincode Activity',
+    filePatterns: [
+      /maharashtra_pincodes\.geojson/
+    ]
+  },
+  {
+    label: 'Transport',
+    filePatterns: [
+      /highway_trunk/,
+      /railway_rail/
+    ]
+  },
+  {
+    label: 'GHS — Built Surface',
+    subGroups: [
+      {
+        subLabel: 'All',
+        patterns: [
+          /ghs_built_s_2020_urban/,
+          /ghs_built_s_2025_urban/,
+          /ghs_built_s_2020.*\.pmtiles/,
+          /ghs_built_s_2025.*\.pmtiles/,
+          /ghs_built_s_change_2020_2025_urban/,
+          /ghs_built_s_change.*\.pmtiles/
+        ]
+      },
+      {
+        subLabel: 'Residential',
+        patterns: [
+          /ghs_built_s_res_2020_urban/,
+          /ghs_built_s_res_2025_urban/,
+          /ghs_built_s_res_2020.*\.pmtiles/,
+          /ghs_built_s_res_2025.*\.pmtiles/,
+          /ghs_built_s_res_change_2020_2025_urban/,
+          /ghs_built_s_res_change.*\.pmtiles/
+        ]
+      },
+      {
+        subLabel: 'Non-residential',
+        patterns: [
+          /ghs_built_s_nres_2020_urban/,
+          /ghs_built_s_nres_2025_urban/,
+          /ghs_built_s_nres_2020.*\.pmtiles/,
+          /ghs_built_s_nres_2025.*\.pmtiles/,
+          /ghs_built_s_nres_change_2020_2025_urban/,
+          /ghs_built_s_nres_change.*\.pmtiles/
+        ]
+      }
+    ],
+    filePatterns: [
+      /ghs_built_s/
+    ]
+  },
+  {
+    label: 'GHS — Population',
+    subGroups: [
+      {
+        subLabel: 'Dense Urban',
+        patterns: [
+          /ghs_pop_2020_urban/,
+          /ghs_pop_2025_urban/
+        ]
+      },
+      {
+        subLabel: 'PMTiles',
+        patterns: [
+          /ghs_pop_2020.*\.pmtiles/,
+          /ghs_pop_2025.*\.pmtiles/
+        ]
+      },
+      {
+        subLabel: 'Change',
+        patterns: [
+          /ghs_pop_change_2020_2025_urban/,
+          /ghs_pop_change.*\.pmtiles/
+        ]
+      }
+    ],
+    filePatterns: [
+      /ghs_pop/
+    ]
+  },
+  {
+    label: 'Nightlights',
+    subGroups: [
+      {
+        subLabel: 'Dense Urban',
+        patterns: [
+          /nightlights_2020_urban/,
+          /nightlights_2025_urban/
+        ]
+      },
+      {
+        subLabel: 'PMTiles',
+        patterns: [
+          /nightlights_2020.*\.pmtiles/,
+          /nightlights_2025.*\.pmtiles/
+        ]
+      },
+      {
+        subLabel: 'Change',
+        patterns: [
+          /nightlights_change/
+        ]
+      }
+    ],
+    filePatterns: [
+      /nightlights/
+    ]
+  }
+];
+
+function assignGroups(files) {
+  // Returns array of { type: 'group'|'standalone', ... }
+  const used = new Set();
+  const result = [];
+
+  for (const gd of groupDefinitions) {
+    const members = files.filter(f => {
+      if (used.has(f)) return false;
+      return gd.filePatterns.some(pat => pat.test(f));
+    });
+    if (!members.length) continue;
+    members.forEach(f => used.add(f));
+
+    if (gd.subGroups) {
+      // Build sub-groups within this group
+      const subGrouped = [];
+      const ungroupedMembers = [...members];
+
+      for (const sg of gd.subGroups) {
+        const sgFiles = members.filter(f => sg.patterns.some(p => p.test(f)));
+        if (sgFiles.length) {
+          subGrouped.push({ subLabel: sg.subLabel, files: sgFiles });
+          sgFiles.forEach(f => { const idx = ungroupedMembers.indexOf(f); if (idx !== -1) ungroupedMembers.splice(idx, 1); });
+        }
+      }
+      // Any ungrouped members land in a catch-all sub-group
+      if (ungroupedMembers.length) subGrouped.push({ subLabel: 'Other', files: ungroupedMembers });
+      result.push({ type: 'group', label: gd.label, subGroups: subGrouped, files: members });
+    } else {
+      result.push({ type: 'group', label: gd.label, files: members });
     }
+  }
 
-    let layersInitialized = false;
+  // Anything unassigned becomes standalone
+  files.filter(f => !used.has(f)).forEach(f => result.push({ type: 'standalone', file: f }));
+  return result;
+}
 
-    async function initializeLayers() {
-      if (layersInitialized) return;
-      layersInitialized = true;
-      renderIndustryLegend();
-      try {
-        const files = await discoverFiles();
-        layerPanel.replaceChildren();
-        if (!files.length) { layerPanel.innerHTML = '<div class="empty">No supported files found.</div>'; return; }
-        files.forEach((path, index) => renderLayerControl(path, index === 0));
-      } catch (error) { layerPanel.innerHTML = `<div class="empty">${error.message} Start the local server from the repo root.</div>`; showStatus(error.message, true); }
+// ─────────────────────────────────────────────────────────────────────────────
+// Render layer panel
+// ─────────────────────────────────────────────────────────────────────────────
+function buildGroupElement(groupDef, firstFileIndex, totalFirstIndex) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'layer-group';
+
+  const header = document.createElement('div');
+  header.className = 'layer-group-header';
+  header.setAttribute('role', 'button');
+  header.setAttribute('tabindex', '0');
+
+  // Group-level master checkbox
+  const masterCheck = document.createElement('input');
+  masterCheck.type = 'checkbox';
+  masterCheck.className = 'group-toggle-check';
+  masterCheck.checked = false; // off by default (unless first group)
+  masterCheck.setAttribute('aria-label', `Toggle all ${groupDef.label} layers`);
+
+  const labelEl = document.createElement('span');
+  labelEl.className = 'group-label';
+  labelEl.textContent = groupDef.label;
+
+  const chevron = document.createElement('span');
+  chevron.className = 'group-chevron';
+  chevron.textContent = '▶';
+  chevron.setAttribute('aria-hidden', 'true');
+
+  header.append(masterCheck, labelEl, chevron);
+  wrapper.append(header);
+
+  const body = document.createElement('div');
+  body.className = 'layer-group-body';
+
+  let allRows = [];
+
+  if (groupDef.subGroups) {
+    groupDef.subGroups.forEach(sg => {
+      if (!sg.files.length) return;
+
+      const sgHeader = document.createElement('div');
+      sgHeader.style.cssText = 'padding:4px 8px 2px;font:700 9px/1.2 Calibri,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);';
+      sgHeader.textContent = sg.subLabel;
+      body.append(sgHeader);
+
+      sg.files.forEach(f => {
+        const row = buildLayerRow(f, false);
+        body.append(row);
+        allRows.push({ path: f, row, checkbox: row.querySelector('input[type="checkbox"]') });
+      });
+    });
+  } else {
+    groupDef.files.forEach(f => {
+      const row = buildLayerRow(f, false);
+      body.append(row);
+      allRows.push({ path: f, row, checkbox: row.querySelector('input[type="checkbox"]') });
+    });
+  }
+
+  wrapper.append(body);
+
+  // Toggle open/close on header click (not on checkbox)
+  header.addEventListener('click', e => {
+    if (e.target === masterCheck) return;
+    wrapper.classList.toggle('open');
+  });
+  header.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); wrapper.classList.toggle('open'); } });
+
+  // Master checkbox toggles all child layers
+  masterCheck.addEventListener('change', e => {
+    e.stopPropagation();
+    allRows.forEach(({ path, checkbox }) => {
+      checkbox.checked = masterCheck.checked;
+      checkbox.dispatchEvent(new Event('change'));
+    });
+  });
+
+  // Keep master checkbox in sync with children
+  function syncMaster() {
+    const checkedCount = allRows.filter(r => r.checkbox.checked).length;
+    masterCheck.indeterminate = checkedCount > 0 && checkedCount < allRows.length;
+    masterCheck.checked = checkedCount === allRows.length;
+  }
+  allRows.forEach(({ checkbox }) => checkbox.addEventListener('change', syncMaster));
+
+  return wrapper;
+}
+
+function renderLayerPanel(files) {
+  layerPanel.replaceChildren();
+  if (!files.length) { layerPanel.innerHTML = '<div class="empty">No supported files found.</div>'; return; }
+
+  const groups  = assignGroups(files);
+  let   isFirst = true;
+
+  groups.forEach(item => {
+    if (item.type === 'standalone') {
+      const wrap = document.createElement('div');
+      wrap.className = 'standalone-layer';
+      const row = buildLayerRow(item.file, isFirst);
+      wrap.append(row);
+      layerPanel.append(wrap);
+      isFirst = false;
+    } else {
+      const el = buildGroupElement(item, 0, 0);
+      // Auto-open the first group
+      if (isFirst) { el.classList.add('open'); isFirst = false; }
+      layerPanel.append(el);
     }
+  });
+}
 
-    map.on('styledata', initializeLayers);
-    map.on('load', initializeLayers);
+// ─────────────────────────────────────────────────────────────────────────────
+// Industry legend toggle
+// ─────────────────────────────────────────────────────────────────────────────
+function renderIndustryLegend() {
+  const legend = document.querySelector('#category-legend');
+  industryCategories.forEach(([category, color]) => {
+    const row    = document.createElement('div'); row.className = 'category-key';
+    const swatch = document.createElement('span'); swatch.className = 'category-swatch'; swatch.style.background = color;
+    const label  = document.createElement('span'); label.textContent = category;
+    row.append(swatch, label); legend.append(row);
+  });
 
-    window.setTimeout(initializeLayers, 0);
+  document.querySelector('#cat-legend-toggle').addEventListener('click', function () {
+    const expanded = this.getAttribute('aria-expanded') === 'true';
+    this.setAttribute('aria-expanded', String(!expanded));
+    legend.hidden = expanded;
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Bootstrap
+// ─────────────────────────────────────────────────────────────────────────────
+let layersInitialized = false;
+
+async function initializeLayers() {
+  if (layersInitialized) return;
+  layersInitialized = true;
+  renderIndustryLegend();
+  try {
+    const files = await discoverFiles();
+    renderLayerPanel(files);
+  } catch (err) {
+    layerPanel.innerHTML = `<div class="empty">${err.message} Start the local server from the repo root.</div>`;
+    showStatus(err.message, true);
+  }
+}
+
+map.on('styledata', initializeLayers);
+map.on('load',      initializeLayers);
+window.setTimeout(initializeLayers, 0);
   </script>
 </body>
 </html>
