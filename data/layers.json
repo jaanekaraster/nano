@@ -106,5 +106,19 @@
     "min": 0.47940674424171,
     "max": 65.227653503418,
     "color": [255, 190, 55, 235]
-  }
+  },
+        {
+  "file": "maharashtra_boundary_highway_trunk.geojson",
+  "url": "maharashtra_boundary_highway_trunk.geojson",
+  "title": "Major Highways",
+  "citation": "OpenStreetMap",
+  "vectorStyle": "roads" 
+},
+        {
+  "file": "maharashtra_boundary_railway_rail.geojson",
+  "url": "maharashtra_boundary_railway_rail.geojson",
+  "title": "Major Rail Corridors",
+  "citation": "OpenStreetMap",
+  "vectorStyle": "rail" 
+}
 ]

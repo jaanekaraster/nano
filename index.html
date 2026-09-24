@@ -374,6 +374,10 @@ map.addControl(layerControl, 'top-right');
     ? { lineColor: '#111', lineWidth: 2, fillOpacity: 0 }
   : metadata.vectorStyle === 'state-boundary-other'
     ? { lineColor: '#777', lineWidth: 1.2, fillOpacity: 0 }
+  : metadata.vectorStyle === 'roads'
+    ? { lineColor: '#786A51', lineWidth: 1.2, fillOpacity: 0 }
+    : metadata.vectorStyle === 'rail'
+    ? { lineColor: '#B34029', lineWidth: 1.2, fillOpacity: 0 }
   : metadata.vectorStyle === 'pincode-activity'
     ? { lineColor: '#d75a3a', lineWidth: 1, fillOpacity: 0 }
   : metadata.vectorStyle === 'urban-population'
