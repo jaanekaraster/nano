@@ -12,7 +12,7 @@ usage() {
 Usage: scripts/clip_downloaded_file.sh <filename> [geojson-path]
 
 Clips data/raw/<filename> to a GeoJSON boundary and writes the result to
-data/processed/clipped/<filename>. The raw input is removed only after a successful
+data/processed/02_clipped/<filename>. The raw input is removed only after a successful
 clip.
 
 The GeoJSON path may be absolute, relative to the current directory, or

@@ -21,92 +21,6 @@
   "vectorStyle": "pincode-activity",
   "activityData": "pincode_activity.json"
 },
-{
-  "file": "built_s_2025_2000_urban.geojson",
-  "url": "built_s_2025_2000_urban.geojson",
-  "title": "Built-Up Area (2000-2025) - Dense Areas",
-  "citation": "Built-up surface change (2000–2025), GHS-BUILT-S. Pixels below 5000 m² built surface per 100m cell excluded; blobs under 1 km² removed. Areas of significant urban growth only.",
-  "vectorStyle": "urban-built-change" 
-},
-  {
-    "file": "built_s_2025_2000_cog.pmtiles",
-    "url": "processed/pmtiles/built_s_2025_2000_cog.pmtiles",
-    "source": "built_s_2025_2000_cog.tif",
-    "title": "Built Surface Change (2000-2025)",
-    "citation": "Source: built_s_2025_2000_cog.tif. Clipped to the Maharashtra boundary and colorized for raster PMTiles.",
-    "min": -234.94674682617,
-    "max": 6637.8759765625,
-    "color": [140, 90, 60, 235]
-  },
-  {
-  "file": "built_s_2025_urban.geojson",
-  "url": "built_s_2025_urban.geojson",
-  "title": "Built-Up Area (2025) - Dense Areas",
-  "citation": "Built-up surface (2025), GHS-BUILT-S. Pixels below 5000 m² built surface per 100m cell excluded; blobs under 1 km² removed. Dense urban footprints only.",
-  "vectorStyle": "urban-built" 
-},
-  {
-    "file": "built_s_2025.pmtiles",
-    "url": "processed/pmtiles/built_s_2025.pmtiles",
-    "source": "built_s_2025.tif",
-    "title": "Built Surface (2025)",
-    "citation": "Source: built_s_2025.tif. Clipped to the Maharashtra boundary and colorized for raster PMTiles.",
-    "min": 0,
-    "max": 10000,
-    "color": [166, 102, 62, 235]
-  },
-    {
-  "file": "built_s_nres_2025_2000_urban.geojson",
-  "url": "built_s_nres_2025_2000_urban.geojson",
-  "title": "Built-Up Non-Residential Area (2025) - Dense Areas",
-  "citation": "Non-residential built-up surface change (2000–2025), GHS-BUILT-S NRES. Pixels below 10 m² non-residential surface per 50m cell excluded; blobs under 0.5 km² removed. Commercial and industrial clusters only.",
-  "vectorStyle": "urban-nres" 
-},
-  {
-    "file": "built_s_nres_2025_2000_cog.pmtiles",
-    "url": "processed/pmtiles/built_s_nres_2025_2000_cog.pmtiles",
-    "source": "built_s_nres_2025_2000_cog.tif",
-    "title": "Built Non-Residential Surface Change (2000-2025)",
-    "citation": "Source: built_s_nres_2025_2000_cog.tif. Clipped to the Maharashtra boundary and colorized for raster PMTiles.",
-    "min": 0,
-    "max": 10000,
-    "color": [196, 96, 255, 235]
-  },
-      {
-  "file": "pop_2025_urban.geojson",
-  "url": "pop_2025_urban.geojson",
-  "title": "Population (2025) - Dense Areas",
-  "citation": "Population density (2025), GHS-POP. Pixels below 200 people per 100m cell excluded; blobs under 1 km² removed. Major urban agglomerations only.",
-  "vectorStyle": "urban-population" 
-},
-  {
-    "file": "pop_2025_cog.pmtiles",
-    "url": "processed/pmtiles/pop_2025_cog.pmtiles",
-    "source": "pop_2025_cog.tif",
-    "title": "Population (2025)",
-    "citation": "Source: pop_2025_cog.tif. Clipped to the Maharashtra boundary and colorized for raster PMTiles.",
-    "version": 2,
-    "min": 0,
-    "max": 529.4892578125,
-    "color": [118, 42, 131, 235]
-  },
-      {
-  "file": "nightlights_west_india_2025_urban.geojson",
-  "url": "nightlights_west_india_2025_urban.geojson",
-  "title": "Nightlights (2025) - Dense Areas",
-  "citation": "Nighttime light intensity (2025), VIIRS. Pixels below radiance value 10 nW/cm²/sr excluded. No area filter applied; shows all lit settlements at native resolution.",
-  "vectorStyle": "urban-nightlights" 
-},
-  {
-    "file": "nightlights_west_india_2025_cog.pmtiles",
-    "url": "processed/pmtiles/nightlights_west_india_2025_cog.pmtiles",
-    "source": "nightlights_west_india_2025_cog.tif",
-    "title": "Nightlights (2025)",
-    "citation": "Source: nightlights_west_india_2025_cog.tif. Clipped to the Maharashtra boundary and colorized for raster PMTiles.",
-    "min": 0.47940674424171,
-    "max": 65.227653503418,
-    "color": [255, 190, 55, 235]
-  },
         {
   "file": "maharashtra_boundary_highway_trunk.geojson",
   "url": "maharashtra_boundary_highway_trunk.geojson",
@@ -120,5 +34,101 @@
   "title": "Major Rail Corridors",
   "citation": "OpenStreetMap",
   "vectorStyle": "rail" 
+},
+{
+  "file": "processed/dense_geojson/ghs_built_s_2025_urban.geojson",
+  "url": "processed/dense_geojson/ghs_built_s_2025_urban.geojson",
+  "title": "Built-Up Area (2025) - Dense Areas",
+  "citation": "Built-up surface (2025), GHS-BUILT-S. Pixels below 5000 m² built surface per 100m cell excluded; blobs under 1 km² removed. Dense urban footprints only.",
+  "vectorStyle": "urban-built" 
+},
+{
+  "file": "processed/dense_geojson/ghs_built_s_2020_urban.geojson",
+  "url": "processed/dense_geojson/ghs_built_s_2020_urban.geojson",
+  "title": "Built-Up Area (2020) - Dense Areas",
+  "citation": "Built-up surface (2020), GHS-BUILT-S. Pixels below 5000 m² built surface per 100m cell excluded; blobs under 1 km² removed. Dense urban footprints only.",
+  "vectorStyle": "urban-built" 
+},
+{
+  "file": "processed/dense_geojson/ghs_built_s_res_2025_urban.geojson",
+  "url": "processed/dense_geojson/ghs_built_s_res_2025_urban.geojson",
+  "title": "Built-Up Residential Area (2025) - Dense Areas",
+  "citation": "Built-up residential surface (2025), GHS-BUILT-S. Pixels below 5000 m² built surface per 100m cell excluded; blobs under 1 km² removed. Dense urban footprints only.",
+  "vectorStyle": "urban-built" 
+},
+{
+  "file": "processed/dense_geojson/ghs_built_s_res_2020_urban.geojson",
+  "url": "processed/dense_geojson/ghs_built_s_res_2020_urban.geojson",
+  "title": "Built-Up Residential Area (2020) - Dense Areas",
+  "citation": "Built-up residential surface (2020), GHS-BUILT-S. Pixels below 5000 m² built surface per 100m cell excluded; blobs under 1 km² removed. Dense urban footprints only.",
+  "vectorStyle": "urban-built" 
+},
+{
+  "file": "processed/dense_geojson/ghs_built_s_nres_2025_urban.geojson",
+  "url": "processed/dense_geojson/ghs_built_s_nres_2025_urban.geojson",
+  "title": "Built-Up Non-Residential Area (2025) - Dense Areas",
+  "citation": "Built-up non-residential surface (2025), GHS-BUILT-S. Pixels below 5000 m² built surface per 100m cell excluded; blobs under 1 km² removed. Dense urban footprints only.",
+  "vectorStyle": "urban-built" 
+},
+{
+  "file": "processed/dense_geojson/ghs_built_s_nres_2020_urban.geojson",
+  "url": "processed/dense_geojson/ghs_built_s_nres_2020_urban.geojson",
+  "title": "Built-Up Non-Residential Area (2020) - Dense Areas",
+  "citation": "Built-up non-residential surface (2020), GHS-BUILT-S. Pixels below 5000 m² built surface per 100m cell excluded; blobs under 1 km² removed. Dense urban footprints only.",
+  "vectorStyle": "urban-built" 
+},
+{
+  "file": "processed/dense_geojson/pop_2025_urban.geojson",
+  "url": "processed/dense_geojson/pop_2025_urban.geojson",
+  "title": "Population (2025) - Dense Areas",
+  "citation": "Population density (2025), GHS-POP. Pixels below 200 people per 100m cell excluded; blobs under 1 km² removed. Major urban agglomerations only.",
+  "vectorStyle": "urban-population" 
+},
+{
+  "file": "processed/dense_geojson/pop_2020_urban.geojson",
+  "url": "processed/dense_geojson/pop_2020_urban.geojson",
+  "title": "Population (2020) - Dense Areas",
+  "citation": "Population density (2020), GHS-POP. Pixels below 200 people per 100m cell excluded; blobs under 1 km² removed. Major urban agglomerations only.",
+  "vectorStyle": "urban-population" 
+},
+{
+  "file": "processed/dense_geojson/nightlights_2025_urban.geojson",
+  "url": "processed/dense_geojson/nightlights_2025_urban.geojson",
+  "title": "Nightlights (2025) - Dense Areas",
+  "citation": "Nighttime light intensity (2025), VIIRS. Pixels below radiance value 10 nW/cm²/sr excluded. No area filter applied; shows all lit settlements at native resolution.",
+  "vectorStyle": "urban-nightlights" 
+},
+{
+  "file": "processed/dense_geojson/nightlights_2025_urban.geojson",
+  "url": "processed/dense_geojson/nightlights_2025_urban.geojson",
+  "title": "Nightlights (2025) - Dense Areas",
+  "citation": "Nighttime light intensity (2025), VIIRS. Pixels below radiance value 10 nW/cm²/sr excluded. No area filter applied; shows all lit settlements at native resolution.",
+  "vectorStyle": "urban-nightlights" 
+},
+{
+  "file": "processed/dense_geojson/nightlights_2020_urban.geojson",
+  "url": "processed/dense_geojson/nightlights_2020_urban.geojson",
+  "title": "Nightlights (2020) - Dense Areas",
+  "citation": "Nighttime light intensity (2020), VIIRS. Pixels below radiance value 10 nW/cm²/sr excluded. No area filter applied; shows all lit settlements at native resolution.",
+  "vectorStyle": "urban-nightlights" 
+},
+{
+  "file": "processed/pmtiles/ghs_built_s_change_2020_2025.pmtiles",
+  "url": "processed/pmtiles/ghs_built_s_change_2020_2025.pmtiles",
+  "source": "ghs_built_s_change_2020_2025.tif",
+  "title": "Built Surface Change (2020-2025)",
+  "citation": "Source: ghs_built_s_change_2020_2025.tif. Clipped to the Maharashtra boundary and colorized for raster PMTiles.",
+  "min": -234.94674682617,
+  "max": 6637.8759765625,
+  "color": [140, 90, 60, 235]
+},
+{
+  "file": "processed/dense_geojson/nightlights_change_2020_2025_urban.geojson",
+  "url": "processed/dense_geojson/nightlights_change_2020_2025_urban.geojson",
+  "title": "Nightlights Change (2020-2025) - Dense Areas",
+  "citation": "Nighttime light intensity (2020-2025), VIIRS. Pixels below radiance value 10 nW/cm²/sr excluded. No area filter applied; shows all lit settlements at native resolution.",
+  "vectorStyle": "urban-nightlights" 
 }
 ]
+
+

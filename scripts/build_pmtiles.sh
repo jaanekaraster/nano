@@ -85,29 +85,74 @@ for input_path in "${inputs[@]}"; do
   filename=$(basename "$input_path")
   id="${filename%.*}"
   case "$filename" in
-    built_s_2025_2000_cog.tif)
+    ghs_built_s_change_2020_2025.tif)
       build_raster "$id" "$filename" -234.94674682617 6637.8759765625 140 90 60 \
-        'Built Surface Change (2000-2025)' \
+        'Built Surface Change (2020-2025)' \
         'Colorized raster PMTiles clipped to the configured boundary.'
       ;;
-    built_s_nres_2025_2000_cog.tif)
+    ghs_built_s_nres_change_2020_2025.tif)
       build_raster "$id" "$filename" 0 10000 196 96 255 \
-        'Built Non-Residential Surface Change (2000-2025)' \
+        'Built Non-Residential Surface Change (2020-2025)' \
         'Colorized raster PMTiles clipped to the configured boundary.'
       ;;
-    pop_2025_cog.tif|GHS_POP_E2025_GLOBE_R2023A_54009_100_V1_0_R7_C26.tif)
+    ghs_built_s_res_change_2020_2025.tif)
+    build_raster "$id" "$filename" 0 10000 196 96 255 \
+      'Built Residential Surface Change (2020-2025)' \
+      'Colorized raster PMTiles clipped to the configured boundary.'
+    ;;
+    ghs_pop_change_2020_2025)
+    build_raster "$id" "$filename" 0 10000 196 96 255 \
+      'Population Change (2020-2025)' \
+      'Colorized raster PMTiles clipped to the configured boundary.'
+    ;;
+    nightlights_change_2020_2025)
+    build_raster "$id" "$filename" 0.47940674424171 65.227653503418 255 190 55 \
+      'Nightlights Change (2020-2025)' \
+      'Colorized raster PMTiles clipped to the configured boundary.'
+    ;;
+    ghs_pop_2025.tif)
       build_raster "$id" "$filename" 0 529.4892578125 118 42 131 \
         'Population (2025)' \
         'Colorized raster PMTiles clipped to the configured boundary.'
       ;;
-    nightlights_*2025*.tif)
+    nightlights_*2020*.tif)
       build_raster "$id" "$filename" 0.47940674424171 65.227653503418 255 190 55 \
         'Nightlights (2025)' \
         'Colorized raster PMTiles clipped to the configured boundary.'
       ;;
-    built_s_2025.tif)
+    nightlights_*2025*.tif)
+    build_raster "$id" "$filename" 0.47940674424171 65.227653503418 255 190 55 \
+      'Nightlights (2025)' \
+      'Colorized raster PMTiles clipped to the configured boundary.'
+    ;;
+    ghs_built_s_2020.tif)
       build_raster "$id" "$filename" 0 10000 166 102 62 \
         'Built Surface (2025)' \
+        'Colorized raster PMTiles generated from the clipped TIFF.'
+      ;;
+    ghs_built_s_2025.tif)
+      build_raster "$id" "$filename" 0 10000 166 102 62 \
+        'Built Surface (2025)' \
+        'Colorized raster PMTiles generated from the clipped TIFF.'
+      ;;
+       ghs_built_s_2020_residential.tif)
+      build_raster "$id" "$filename" 0 10000 166 102 62 \
+        'Built Surface Residential (2020)' \
+        'Colorized raster PMTiles generated from the clipped TIFF.'
+      ;;
+    ghs_built_s_2025_residential.tif)
+      build_raster "$id" "$filename" 0 10000 166 102 62 \
+        'Built Surface Residential (2025)' \
+        'Colorized raster PMTiles generated from the clipped TIFF.'
+      ;;
+      ghs_built_s_2020_nres.tif)
+      build_raster "$id" "$filename" 0 10000 166 102 62 \
+        'Built Surface Non-Residential (2020)' \
+        'Colorized raster PMTiles generated from the clipped TIFF.'
+      ;;
+    ghs_built_s_2025_nres.tif)
+      build_raster "$id" "$filename" 0 10000 166 102 62 \
+        'Built Surface Non-Residential (2025)' \
         'Colorized raster PMTiles generated from the clipped TIFF.'
       ;;
     *)

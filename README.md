@@ -55,10 +55,9 @@ uv run python ./scripts/nonzero_to_gpkg.py data/processed/clipped/pop_2025_cog.t
 ```
 # BUILT-S
 ```
+# Regular or Change
 uv run python ./scripts/nonzero_to_gpkg.py data/processed/clipped/built_s_2025.tif built_s_2025_urban.geojson     --resample 10 --dissolve --tolerance 500 --min-area 1000000     --min-value 5000 --overwrite
 
- uv run python ./scripts/nonzero_to_gpkg.py data/processed/clipped/built_s_2025_2000_cog.tif built_s_2025_2000_urban.geojson     --resample 10 --dissolve --tolerance 500
- --min-area 1000000     --min-value 5000 --overwrite
 ```
 
 ## BUILT-S-NRES
