@@ -2,82 +2,30 @@
 
 set -euo pipefail
 
+============================================================
+NIGHTTIME LIGHTS -> MAHARASHTRA PIN-CODE STATISTICS
+Outputs:
+1. CSV containing PIN-code zonal statistics
+2. GeoJSON containing PIN-code geometries + all statistics
+Method:
+- Area-weighted radiance statistics
+- Fractional pixel/polygon intersection weights
+- Geodesic area calculations on WGS84
+- Vectorized Shapely 2 intersection operations
+Requirements:
+Python 3
+rasterio
+geopandas
+numpy
+pandas
+pyproj
+shapely >= 2.0
+============================================================
+============================================================
+PROJECT PATHS
+============================================================
 
-# ============================================================
-# NIGHTTIME LIGHTS -> MAHARASHTRA PIN-CODE STATISTICS
-#
-# Calculates exact / fractional-pixel zonal statistics from an
-# analysis-ready VIIRS nighttime-lights raster.
-#
-# Default input:
-#
-#   data/processed/clipped/nightlights_2025_calibrated.tif
-#
-# PIN-code polygons:
-#
-#   data/districts/maharashtra_pincodes_fixed.geojson
-#
-# Output:
-#
-#   data/processed/nightlights_2025_by_pincode.csv
-#
-#
-# Metrics:
-#
-#   mean_radiance
-#       Area-weighted mean radiance over valid raster coverage.
-#
-#       Σ(R_i * A_i) / Σ(A_i)
-#
-#
-#   sol
-#       Sum-of-lights area integral:
-#
-#       Σ(R_i * A_i)
-#
-#       Units:
-#       nW/(cm^2 sr) * km^2
-#
-#
-#   valid_area_km2
-#       Area of the PIN code covered by valid raster pixels.
-#
-#
-#   pincode_area_km2
-#       Geodesic area of the complete PIN-code polygon.
-#
-#
-#   coverage_ratio
-#       valid_area_km2 / pincode_area_km2
-#
-#
-#   lit_area_km2
-#       Valid area where radiance > LIT_THRESHOLD.
-#
-#
-#   lit_area_ratio
-#       lit_area_km2 / valid_area_km2
-#
-#
-# IMPORTANT:
-#
-# Raster NoData is excluded.
-#
-# Pixels intersecting PIN-code boundaries are weighted by their
-# fractional overlap with the polygon.
-#
-# Pixel area is calculated geodesically, so EPSG:4326 pixel
-# area differences across Maharashtra are handled correctly.
-#
-# ============================================================
-
-
-# ============================================================
-# PROJECT PATHS
-# ============================================================
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+SCRIPT_DIR="(cd"(dirname "${BASH_SOURCE[0]}")" && pwd)" PROJECT_ROOT="(cd"SCRIPT_DIR/../.." && pwd)"
 
 DATA_DIR="$PROJECT_ROOT/nano/data"
 
@@ -87,10 +35,11 @@ RASTER_FILE="$DATA_DIR/processed/clipped/nightlights_2025_calibrated.tif"
 
 OUTPUT_CSV="$DATA_DIR/processed/nightlights_2025_by_pincode.csv"
 
+OUTPUT_GEOJSON="$DATA_DIR/processed/nightlights_2025_by_pincode.geojson"
 
-# ============================================================
-# CONFIGURATION
-# ============================================================
+============================================================
+CONFIGURATION
+============================================================
 
 YEAR=2025
 
@@ -100,711 +49,213 @@ PINCODE_FIELD="pincode"
 
 NODATA_VALUE=-9999
 
+Maximum number of candidate pixels processed in one batch.
+Increase if RAM permits; decrease for machines with limited RAM.
 
-# ============================================================
-# FUNCTIONS
-# ============================================================
+PIXEL_BATCH_SIZE=20000
 
-log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
-}
+============================================================
+FUNCTIONS
+============================================================
 
+log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" }
 
-die() {
-    echo "ERROR: $*" >&2
-    exit 1
-}
+die() { echo "ERROR: $*" >&2 exit 1 }
 
+============================================================
+VALIDATION
+============================================================
 
-# ============================================================
-# VALIDATION
-# ============================================================
+log "============================================================" log "Nighttime lights -> Maharashtra PIN-code aggregation" log "============================================================"
 
-log "============================================================"
-log "Nighttime lights -> Maharashtra PIN-code aggregation"
-log "============================================================"
+log "Year: $YEAR" log "Raster: $RASTER_FILE" log "PIN codes: $PINCODE_FILE" log "CSV output: $OUTPUT_CSV" log "GeoJSON output: $OUTPUT_GEOJSON" log "Lit threshold: $LIT_THRESHOLD nW/(cm^2 sr)"
 
-log "Year:          $YEAR"
-log "Raster:        $RASTER_FILE"
-log "PIN codes:     $PINCODE_FILE"
-log "Output:        $OUTPUT_CSV"
-log "Lit threshold: $LIT_THRESHOLD nW/(cm^2 sr)"
+[[ -f "$RASTER_FILE" ]] || die "Raster not found: $RASTER_FILE"
 
+[[ -f "$PINCODE_FILE" ]] || die "PIN-code file not found: $PINCODE_FILE"
 
-[[ -f "$RASTER_FILE" ]] ||
-    die "Raster not found: $RASTER_FILE"
+command -v python3 >/dev/null 2>&1 || die "python3 is required."
 
+mkdir -p "(dirname"OUTPUT_CSV")" mkdir -p "(dirname"OUTPUT_GEOJSON")"
 
-[[ -f "$PINCODE_FILE" ]] ||
-    die "PIN-code file not found: $PINCODE_FILE"
+============================================================
+CHECK PYTHON PACKAGES
+============================================================
 
+python3 - <<'PY' import importlib.util import sys
 
-command -v python3 >/dev/null 2>&1 ||
-    die "python3 is required."
+required = [ "rasterio", "geopandas", "numpy", "pandas", "pyproj", "shapely", ]
 
+missing = [ package for package in required if importlib.util.find_spec(package) is None ]
 
-mkdir -p "$(dirname "$OUTPUT_CSV")"
+if missing: print( "ERROR: Missing Python packages: " + ", ".join(missing), file=sys.stderr, ) print( "\nInstall with:\n" " python3 -m pip install rasterio geopandas numpy pandas pyproj 'shapely>=2.0'\n", file=sys.stderr, ) sys.exit(1)
 
+import shapely
 
-# ============================================================
-# CHECK PYTHON PACKAGES
-# ============================================================
+if int(shapely.version.split(".")[0]) < 2: print( "ERROR: Shapely 2.0 or later is required.", file=sys.stderr, ) sys.exit(1) PY
 
-python3 - <<'PY'
-import importlib.util
-import sys
+============================================================
+RUN AGGREGATION
+============================================================
 
-required = [
-    "rasterio",
-    "geopandas",
-    "numpy",
-    "pandas",
-    "pyproj",
-]
+export PINCODE_FILE export RASTER_FILE export OUTPUT_CSV export OUTPUT_GEOJSON export YEAR export LIT_THRESHOLD export PINCODE_FIELD export NODATA_VALUE export PIXEL_BATCH_SIZE
 
-missing = [
-    package
-    for package in required
-    if importlib.util.find_spec(package) is None
-]
+python3 <<'PY' import os import sys import math import warnings
 
-if missing:
-    print(
-        "ERROR: Missing Python packages: "
-        + ", ".join(missing),
-        file=sys.stderr,
-    )
-    print(
-        "\nInstall them with:\n\n"
-        "  pip install rasterio geopandas numpy pandas pyproj\n",
-        file=sys.stderr,
-    )
-    sys.exit(1)
-PY
+import numpy as np import pandas as pd import geopandas as gpd import rasterio
 
+from rasterio.windows import from_bounds, transform as window_transform from rasterio.windows import Window from rasterio.errors import WindowError
 
-# ============================================================
-# RUN AGGREGATION
-# ============================================================
+from shapely.geometry import box from shapely import intersection, area, is_empty, is_valid, make_valid from pyproj import Geod
 
-export PINCODE_FILE
-export RASTER_FILE
-export OUTPUT_CSV
-export YEAR
-export LIT_THRESHOLD
-export PINCODE_FIELD
-export NODATA_VALUE
+============================================================
+CONFIG
+============================================================
 
+PINCODE_FILE = os.environ["PINCODE_FILE"] RASTER_FILE = os.environ["RASTER_FILE"] OUTPUT_CSV = os.environ["OUTPUT_CSV"] OUTPUT_GEOJSON = os.environ["OUTPUT_GEOJSON"]
 
-python3 <<'PY'
-
-import os
-import sys
-import math
-
-import numpy as np
-import pandas as pd
-import geopandas as gpd
-import rasterio
-
-from rasterio.mask import mask
-from rasterio.features import geometry_mask
-from rasterio.windows import from_bounds
-from rasterio.windows import transform as window_transform
-
-from shapely.geometry import box
-from pyproj import Geod
-
-
-# ============================================================
-# CONFIG
-# ============================================================
-
-PINCODE_FILE = os.environ["PINCODE_FILE"]
-RASTER_FILE = os.environ["RASTER_FILE"]
-OUTPUT_CSV = os.environ["OUTPUT_CSV"]
-
-YEAR = int(os.environ["YEAR"])
-
-LIT_THRESHOLD = float(os.environ["LIT_THRESHOLD"])
-
-PINCODE_FIELD = os.environ["PINCODE_FIELD"]
-
-OUTPUT_NODATA = float(os.environ["NODATA_VALUE"])
-
-
-# ============================================================
-# HELPERS
-# ============================================================
+YEAR = int(os.environ["YEAR"]) LIT_THRESHOLD = float(os.environ["LIT_THRESHOLD"]) PINCODE_FIELD = os.environ["PINCODE_FIELD"] OUTPUT_NODATA = float(os.environ["NODATA_VALUE"]) BATCH_SIZE = int(os.environ["PIXEL_BATCH_SIZE"])
 
 GEOD = Geod(ellps="WGS84")
 
+============================================================
+GEODESIC AREA HELPERS
+============================================================
 
-def geodesic_area_km2(geometry):
-    """
-    Calculate geodesic polygon area in square kilometres.
-    """
+def geodesic_area_km2(geometry): """Return absolute WGS84 geodesic area in square kilometres.""" if geometry is None or geometry.is_empty: return 0.0
 
-    if geometry is None or geometry.is_empty:
-        return 0.0
-
-    area_m2, _ = GEOD.geometry_area_perimeter(geometry)
-
-    return abs(area_m2) / 1_000_000.0
+area_m2, _ = GEOD.geometry_area_perimeter(geometry)
+return abs(area_m2) / 1_000_000.0
 
 
-def pixel_polygon(transform, row, col):
-    """
-    Return polygon representing one raster pixel.
-    """
+def geodesic_areas_km2(geometries): """ Calculate geodesic areas for a sequence of geometries.
 
-    x_left, y_top = transform * (col, row)
-
-    x_right, y_bottom = transform * (col + 1, row + 1)
-
-    return box(
-        min(x_left, x_right),
-        min(y_bottom, y_top),
-        max(x_left, x_right),
-        max(y_bottom, y_top),
-    )
-
-
-def safe_ratio(numerator, denominator):
-
-    if denominator is None or denominator <= 0:
-        return np.nan
-
-    return numerator / denominator
-
-
-# ============================================================
-# LOAD PIN CODES
-# ============================================================
-
-print("Loading PIN-code polygons...")
-
-gdf = gpd.read_file(PINCODE_FILE)
-
-
-if PINCODE_FIELD not in gdf.columns:
-
-    raise RuntimeError(
-        f"PIN-code field '{PINCODE_FIELD}' not found. "
-        f"Available fields: {list(gdf.columns)}"
-    )
-
-
-if gdf.crs is None:
-
-    raise RuntimeError(
-        "PIN-code GeoJSON has no CRS."
-    )
-
-
-# Keep PIN codes as strings.
-
-gdf[PINCODE_FIELD] = (
-    gdf[PINCODE_FIELD]
-    .astype(str)
-    .str.strip()
+PyProj supports vectorized coordinate arrays for simple rings,
+but polygon holes and multipart geometries need careful handling.
+Use the reliable geometry API here; intersection calculations
+themselves are batched.
+"""
+return np.fromiter(
+    (geodesic_area_km2(g) for g in geometries),
+    dtype=np.float64,
+    count=len(geometries),
 )
 
 
-# ============================================================
-# OPEN RASTER
-# ============================================================
+def safe_ratio(numerator, denominator): if denominator is None or not np.isfinite(denominator) or denominator <= 0: return np.nan return numerator / denominator
+
+def empty_result(pincode, district, pincode_area): return { "pincode": pincode, "district": district, "year": YEAR, "sensor": "VIIRS", "mean_radiance": np.nan, "sol": np.nan, "pincode_area_km2": pincode_area, "valid_area_km2": 0.0, "coverage_ratio": 0.0 if pincode_area > 0 else np.nan, "lit_area_km2": 0.0, "lit_area_ratio": np.nan, "valid_pixel_equiv": 0.0, }
+
+============================================================
+LOAD PIN-CODE POLYGONS
+============================================================
+
+print("Loading PIN-code polygons...", flush=True)
+
+gdf = gpd.read_file(PINCODE_FILE)
+
+if gdf.empty: raise RuntimeError("PIN-code file contains no features.")
+
+if PINCODE_FIELD not in gdf.columns: raise RuntimeError( f"PIN-code field '{PINCODE_FIELD}' not found. " f"Available fields: {list(gdf.columns)}" )
+
+if gdf.crs is None: raise RuntimeError("PIN-code GeoJSON has no CRS.")
+
+Preserve PIN codes as strings, including leading zeroes.
+
+gdf[PINCODE_FIELD] = gdf[PINCODE_FIELD].astype("string").str.strip()
+
+if "district" not in gdf.columns: gdf["district"] = ""
+
+Repair invalid polygon geometries where possible.
+
+invalid = ~gdf.geometry.is_valid & gdf.geometry.notna()
+
+if invalid.any(): print( f"Repairing {int(invalid.sum())} invalid PIN-code geometries...", flush=True, ) gdf.loc[invalid, "geometry"] = gdf.loc[invalid, "geometry"].map( lambda geom: make_valid(geom) if geom is not None else None )
+
+Drop null/empty geometries from spatial processing, but retain the
+records and their attributes in the output.
+
+gdf = gdf.reset_index(drop=True)
+
+============================================================
+OPEN RASTER
+============================================================
+
+rows = []
 
 with rasterio.open(RASTER_FILE) as src:
 
-    print()
-    print("Raster information:")
-    print(f"  CRS:       {src.crs}")
-    print(f"  size:      {src.width} x {src.height}")
-    print(f"  datatype:  {src.dtypes[0]}")
-    print(f"  NoData:    {src.nodata}")
-    print(f"  transform: {src.transform}")
-    print()
+print("\nRaster information:", flush=True)
+print(f"  CRS:      {src.crs}", flush=True)
+print(f"  Size:     {src.width} x {src.height}", flush=True)
+print(f"  Type:     {src.dtypes[0]}", flush=True)
+print(f"  NoData:   {src.nodata}", flush=True)
+print(f"  Transform:{src.transform}", flush=True)
 
+if src.crs is None:
+    raise RuntimeError("Nightlights raster has no CRS.")
 
-    if src.crs is None:
+if not src.crs.is_geographic:
+    raise RuntimeError(
+        "This script calculates geodesic pixel areas and expects "
+        "a geographic raster, for example EPSG:4326."
+    )
 
-        raise RuntimeError(
-            "Nightlights raster has no CRS."
-        )
+# Reproject polygons into the raster CRS for pixel intersection.
+if gdf.crs != src.crs:
+    print(
+        f"\nReprojecting PIN codes from {gdf.crs} to {src.crs}...",
+        flush=True,
+    )
+    gdf = gdf.to_crs(src.crs)
 
+# GeoJSON output must use WGS84 longitude/latitude.
+# Retain a WGS84 version of the geometries for final export.
+output_gdf = gdf.to_crs("EPSG:4326").copy()
 
-    # --------------------------------------------------------
-    # Transform PIN codes to raster CRS
-    # --------------------------------------------------------
+total = len(gdf)
 
-    if gdf.crs != src.crs:
+for feature_index, feature in gdf.iterrows():
 
-        print(
-            f"Reprojecting PIN codes from {gdf.crs} "
-            f"to {src.crs}..."
-        )
+    pincode = feature[PINCODE_FIELD]
+    district = feature.get("district", "")
+    geometry = feature.geometry
 
-        gdf = gdf.to_crs(src.crs)
+    if pd.isna(pincode):
+        pincode = ""
 
+    pincode = str(pincode).strip()
+    district = "" if pd.isna(district) else str(district)
 
-    # --------------------------------------------------------
-    # This script calculates pixel areas geodesically.
-    #
-    # That requires geographic coordinates.
-    # --------------------------------------------------------
+    print(
+        f"[{feature_index + 1}/{total}] PIN {pincode}",
+        flush=True,
+    )
 
-    if not src.crs.is_geographic:
+    # Handle missing and empty geometries.
+    if geometry is None or geometry.is_empty:
+        rows.append(empty_result(pincode, district, 0.0))
+        continue
 
-        raise RuntimeError(
-            "This version expects a geographic raster "
-            "(for example EPSG:4326)."
-        )
+    # Full PIN-code polygon area, independent of raster coverage.
+    pincode_area_km2 = geodesic_area_km2(geometry)
 
+    if pincode_area_km2 <= 0:
+        rows.append(empty_result(pincode, district, pincode_area_km2))
+        continue
 
-    # ========================================================
-    # PROCESS PIN CODES
-    # ========================================================
+    minx, miny, maxx, maxy = geometry.bounds
 
-    rows = []
-
-    total = len(gdf)
-
-
-    for index, feature in gdf.iterrows():
-
-        pincode = feature[PINCODE_FIELD]
-
-        district = feature.get("district", "")
-
-        geometry = feature.geometry
-
-
-        print(
-            f"[{index + 1}/{total}] "
-            f"PIN {pincode}",
-            flush=True,
-        )
-
-
-        # ----------------------------------------------------
-        # Handle empty geometry
-        # ----------------------------------------------------
-
-        if geometry is None or geometry.is_empty:
-
-            rows.append({
-                "pincode": pincode,
-                "district": district,
-                "year": YEAR,
-                "sensor": "VIIRS",
-                "mean_radiance": np.nan,
-                "sol": np.nan,
-                "pincode_area_km2": 0.0,
-                "valid_area_km2": 0.0,
-                "coverage_ratio": 0.0,
-                "lit_area_km2": 0.0,
-                "lit_area_ratio": np.nan,
-                "valid_pixel_equiv": 0.0,
-            })
-
-            continue
-
-
-        # ----------------------------------------------------
-        # Full PIN-code area
-        # ----------------------------------------------------
-
-        pincode_area_km2 = geodesic_area_km2(geometry)
-
-
-        # ----------------------------------------------------
-        # Determine raster window intersecting polygon bounds
-        # ----------------------------------------------------
-
-        minx, miny, maxx, maxy = geometry.bounds
-
-
+    # Determine candidate raster window from polygon bounds.
+    try:
         window = from_bounds(
             minx,
             miny,
             maxx,
             maxy,
             transform=src.transform,
-        )
+        ).round_offsets().round_lengths()
 
-
-        # Expand to whole pixels.
-
-        window = window.round_offsets().round_lengths()
-
-
-        # Clamp window to raster.
-
-        full_window = rasterio.windows.Window(
+        full_window = Window(
             col_off=0,
             row_off=0,
-            width=src.width,
-            height=src.height,
-        )
-
-
-        try:
-
-            window = window.intersection(full_window)
-
-        except rasterio.errors.WindowError:
-
-            rows.append({
-                "pincode": pincode,
-                "district": district,
-                "year": YEAR,
-                "sensor": "VIIRS",
-                "mean_radiance": np.nan,
-                "sol": np.nan,
-                "pincode_area_km2": pincode_area_km2,
-                "valid_area_km2": 0.0,
-                "coverage_ratio": 0.0,
-                "lit_area_km2": 0.0,
-                "lit_area_ratio": np.nan,
-                "valid_pixel_equiv": 0.0,
-            })
-
-            continue
-
-
-        data = src.read(
-            1,
-            window=window,
-            masked=False,
-        )
-
-
-        transform = window_transform(
-            window,
-            src.transform,
-        )
-
-
-        # ====================================================
-        # EXACT FRACTIONAL PIXEL CALCULATION
-        #
-        # For every candidate raster pixel:
-        #
-        #   1. construct its geographic footprint
-        #   2. intersect with the PIN polygon
-        #   3. calculate geodesic intersection area
-        #   4. use that exact area as the weight
-        #
-        # This avoids assigning entire edge pixels to a PIN.
-        # ====================================================
-
-        radiance_area_sum = 0.0
-
-        valid_area_km2 = 0.0
-
-        lit_area_km2 = 0.0
-
-        valid_pixel_equiv = 0.0
-
-
-        nrows, ncols = data.shape
-
-
-        for row in range(nrows):
-
-            for col in range(ncols):
-
-                value = float(data[row, col])
-
-
-                # --------------------------------------------
-                # Exclude invalid / NoData raster values
-                # --------------------------------------------
-
-                if not math.isfinite(value):
-
-                    continue
-
-
-                if src.nodata is not None:
-
-                    if np.isclose(value, src.nodata):
-
-                        continue
-
-
-                if np.isclose(value, OUTPUT_NODATA):
-
-                    continue
-
-
-                if value < 0:
-
-                    continue
-
-
-                # --------------------------------------------
-                # Construct pixel polygon
-                # --------------------------------------------
-
-                px = pixel_polygon(
-                    transform,
-                    row,
-                    col,
-                )
-
-
-                # Fast rejection.
-
-                if not geometry.intersects(px):
-
-                    continue
-
-
-                # --------------------------------------------
-                # Exact intersection
-                # --------------------------------------------
-
-                intersection = geometry.intersection(px)
-
-
-                if intersection.is_empty:
-
-                    continue
-
-
-                intersection_area_km2 = (
-                    geodesic_area_km2(intersection)
-                )
-
-
-                if intersection_area_km2 <= 0:
-
-                    continue
-
-
-                pixel_area_km2 = geodesic_area_km2(px)
-
-
-                if pixel_area_km2 <= 0:
-
-                    continue
-
-
-                fraction = (
-                    intersection_area_km2
-                    /
-                    pixel_area_km2
-                )
-
-
-                # --------------------------------------------
-                # Accumulate valid area
-                # --------------------------------------------
-
-                valid_area_km2 += intersection_area_km2
-
-                valid_pixel_equiv += fraction
-
-
-                # --------------------------------------------
-                # SOL
-                #
-                # radiance * intersected area
-                # --------------------------------------------
-
-                radiance_area_sum += (
-                    value
-                    *
-                    intersection_area_km2
-                )
-
-
-                # --------------------------------------------
-                # Lit area
-                # --------------------------------------------
-
-                if value > LIT_THRESHOLD:
-
-                    lit_area_km2 += (
-                        intersection_area_km2
-                    )
-
-
-        # ====================================================
-        # DERIVED METRICS
-        # ====================================================
-
-        if valid_area_km2 > 0:
-
-            mean_radiance = (
-                radiance_area_sum
-                /
-                valid_area_km2
-            )
-
-            sol = radiance_area_sum
-
-        else:
-
-            mean_radiance = np.nan
-
-            sol = np.nan
-
-
-        coverage_ratio = safe_ratio(
-            valid_area_km2,
-            pincode_area_km2,
-        )
-
-
-        lit_area_ratio = safe_ratio(
-            lit_area_km2,
-            valid_area_km2,
-        )
-
-
-        rows.append({
-
-            "pincode": pincode,
-
-            "district": district,
-
-            "year": YEAR,
-
-            "sensor": "VIIRS",
-
-            "mean_radiance": mean_radiance,
-
-            "sol": sol,
-
-            "pincode_area_km2": pincode_area_km2,
-
-            "valid_area_km2": valid_area_km2,
-
-            "coverage_ratio": coverage_ratio,
-
-            "lit_area_km2": lit_area_km2,
-
-            "lit_area_ratio": lit_area_ratio,
-
-            "valid_pixel_equiv": valid_pixel_equiv,
-
-        })
-
-
-# ============================================================
-# CREATE DATAFRAME
-# ============================================================
-
-result = pd.DataFrame(rows)
-
-
-# ------------------------------------------------------------
-# Sort PIN codes
-# ------------------------------------------------------------
-
-result = result.sort_values(
-    ["pincode"],
-    kind="stable",
-)
-
-
-# ------------------------------------------------------------
-# Round output values
-#
-# Keep enough precision for downstream analysis.
-# ------------------------------------------------------------
-
-rounding = {
-
-    "mean_radiance": 6,
-
-    "sol": 6,
-
-    "pincode_area_km2": 6,
-
-    "valid_area_km2": 6,
-
-    "coverage_ratio": 6,
-
-    "lit_area_km2": 6,
-
-    "lit_area_ratio": 6,
-
-    "valid_pixel_equiv": 6,
-
-}
-
-
-result = result.round(rounding)
-
-
-# ============================================================
-# WRITE CSV
-# ============================================================
-
-result.to_csv(
-    OUTPUT_CSV,
-    index=False,
-)
-
-
-# ============================================================
-# SUMMARY
-# ============================================================
-
-print()
-print("============================================================")
-print("Aggregation complete")
-print("============================================================")
-
-print(f"PIN codes: {len(result)}")
-
-print(
-    "PIN codes with valid radiance: "
-    f"{result['mean_radiance'].notna().sum()}"
-)
-
-print(
-    "Mean coverage ratio: "
-    f"{result['coverage_ratio'].mean():.4f}"
-)
-
-print(
-    "Median coverage ratio: "
-    f"{result['coverage_ratio'].median():.4f}"
-)
-
-print()
-print(f"Output: {OUTPUT_CSV}")
-print()
-
-print("Columns:")
-print()
-
-for column in result.columns:
-    print(f"  {column}")
-
-print()
-
-PY
-
-
-# ============================================================
-# FINISHED
-# ============================================================
-
-log "============================================================"
-log "PIN-code aggregation complete"
-log "============================================================"
-
-log "Output:"
-log "$OUTPUT_CSV"
-
-log ""
-
-log "Preview:"
-
-head -n 6 "$OUTPUT_CSV"
